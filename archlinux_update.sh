@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-pacman -Syu
-cat >> /var/log/iptables.log <<EOF
-$(date)
-=================================================================================
-$(iptables -vnL)
-=================================================================================
+log_iptables() {
+  date
+  iptables -vnL
+  echo -e "\n\n"
+}
 
-
-EOF
+pacman -Syu --noconfirm &&
+log_iptables &>> /var/log/iptables.log &&
 shutdown -r +2
