@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 log_iptables() {
-  date
+  local ANSI_BLUE="\e[94m"
+  local ANSI_END="\e[0m"
+  echo "${ANSI_BLUE}$(date)${ANSI_END}"
   iptables -vnL
   echo -e "\n\n"
 }
