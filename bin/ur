@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S bash -l
 
 log_iptables() {
   echo -e "${ME_ANSI_BLUE}$(date)${ME_ANSI_END}"
