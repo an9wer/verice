@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+case $(me_release) in
+  arch) pacman -Syu --noconfirm ;;
+  raspbian) apt update && apt upgrade -y ;;
+esac

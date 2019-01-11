@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+{
+  me info $(date)
+  iptables -vnL
+  echo -e "\n\n"
+} &>> /var/log/iptables.log

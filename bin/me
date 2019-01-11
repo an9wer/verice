@@ -1,0 +1,17 @@
+#!/usr/bin/env bash 
+
+ME_ANSI_END="\e[0m"
+ME_ANSI_BOLD="\e[1m"
+ME_ANSI_RED="\e[91m"
+ME_ANSI_GREEN="\e[92m"
+ME_ANSI_YELLOW="\e[93m"
+ME_ANSI_BLUE="\e[94m"
+ME_ANSI_MAGENTA="\e[95m"
+ME_ANSI_CYAN="\e[96m"
+ME_ANSI_WHITE="\e[97m"
+
+case $1 in
+  info) shift; echo -e "${ME_ANSI_BOLD}${ME_ANSI_BLUE}${*}${ME_ANSI_END}" ;;
+  warn) shift; echo -e "${ME_ANSI_BOLD}${ME_ANSI_YELLOW}${*}${ME_ANSI_END}" ;;
+  err ) shift; echo -e "${ME_ANSI_BOLD}${ME_ANSI_RED}${*}${ME_ANSI_END}" >&2 ;;
+esac
