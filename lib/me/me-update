@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-case $(me_release) in
+case $(me release) in
   arch) pacman -Syu --noconfirm ;;
   raspbian) apt update && apt upgrade -y ;;
+  *) echo "Unknown distro :(" ;;
 esac

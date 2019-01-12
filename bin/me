@@ -10,8 +10,31 @@ ME_ANSI_MAGENTA="\e[95m"
 ME_ANSI_CYAN="\e[96m"
 ME_ANSI_WHITE="\e[97m"
 
-case $1 in
-  info) shift; echo -e "${ME_ANSI_BOLD}${ME_ANSI_BLUE}${*}${ME_ANSI_END}" ;;
-  warn) shift; echo -e "${ME_ANSI_BOLD}${ME_ANSI_YELLOW}${*}${ME_ANSI_END}" ;;
-  err ) shift; echo -e "${ME_ANSI_BOLD}${ME_ANSI_RED}${*}${ME_ANSI_END}" >&2 ;;
-esac
+ME_SUBCMDS=(
+  $(find /usr/local/lib/me -name 'me-*' -printf "%f\n" | cut -c 4-) )
+ME_JOB_SUBCMDS=(
+  $(find /usr/local/lib/me-job -name 'me-job-*' -printf "%f\n" | cut -c 8-) )
+
+IFS='|' me_subcmds_filter="${ME_SUBCMDS[*]}"
+IFS='|' me_job_subcmds_filter="${ME_JOB_SUBCMDS[*]}"
+
+if [[ $1 == info ]]; then
+  shift
+  echo -e "${ME_ANSI_BOLD}${ME_ANSI_BLUE}${*}${ME_ANSI_END}"
+
+elif [[ $1 == warn ]]; then
+  shift
+  echo -e "${ME_ANSI_BOLD}${ME_ANSI_YELLOW}${*}${ME_ANSI_END}"
+
+elif [[ $1 == err ]]; then
+  shift
+  echo -e "${ME_ANSI_BOLD}${ME_ANSI_RED}${*}${ME_ANSI_END}"
+
+elif [[ $1 =~ $me_subcmds_filter ]]; then
+  /usr/local/lib/me/me-$1
+
+elif [[ $1 == job ]]; then
+  shift
+  [[ $1 =~ $me_job_subcmds_filter ]] && /usr/local/lib/me-job/me-job-$1
+
+fi

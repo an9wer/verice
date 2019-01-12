@@ -1,0 +1,3 @@
+-   [ ] Dynamic directory to install
+-   [ ] Completion for command me
+-   [ ] Unit test
