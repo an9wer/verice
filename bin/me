@@ -15,8 +15,8 @@ ME_SUBCMDS=(
 ME_JOB_SUBCMDS=(
   $(find /usr/local/lib/me-job -name 'me-job-*' -printf "%f\n" | cut -c 8-) )
 
-IFS='|' me_subcmds_filter="${ME_SUBCMDS[*]}"
-IFS='|' me_job_subcmds_filter="${ME_JOB_SUBCMDS[*]}"
+me_subcmds_filter=$(IFS='|'; echo "${ME_SUBCMDS[*]}")
+me_job_subcmds_filter=$(IFS='|'; echo "${ME_JOB_SUBCMDS[*]}")
 
 if [[ $1 == info ]]; then
   shift
