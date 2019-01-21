@@ -4,14 +4,25 @@ LIB_ME_DIR = $(prefix)/lib/me
 LIB_ME_JOB_DIR = $(prefix)/lib/me-job
 PROFILE_DIR = /etc/profile.d
 
+M4 := m4
 RM := rm
 GIT := git
+CHMOD := chmod
 INSTALL := install
 
-.PHONY: update install uninstall
+.PHONY: build update install uninstall
+
+build: bin/me
+
+bin/me: bin/me.in
+	$(M4) -DLIB_ME_DIR=$(LIB_ME_DIR) -DLIB_ME_JOB_DIR=$(LIB_ME_JOB_DIR) $< >$@
+	$(CHMOD) 755 $@
 
 update:
 	$(GIT) pull origin master
+
+clean:
+	$(RM) -f bin/me
 
 install:
 	mkdir -p $(BIN_DIR)
