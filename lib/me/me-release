@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
-[[ $(uname -s) == Linux ]] && echo "Unknown system :(" ; exit 1
+[[ $(uname -s) == Linux ]] || {
+  me err "Unknown system :("
+  exit 1
+}
 
-awk -F= '$1=="ID"{print $2}"' /etc/os-release
+awk -F= '$1=="ID"{print $2}' /etc/os-release

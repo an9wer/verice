@@ -5,6 +5,7 @@ packages=(
   make
   man-pages
   vim
+  bash-completion
 )
 
 pacman -Sy --needed --noconfirm ${packages[@]}

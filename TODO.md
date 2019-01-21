@@ -1,3 +1,3 @@
 -   [x] Dynamic directory to install
--   [ ] Completion for command me
--   [ ] Unit test
+-   [x] Completion for command me
+-   [x] Docker

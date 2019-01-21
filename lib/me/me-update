@@ -3,5 +3,5 @@
 case $(me release) in
   arch) pacman -Syu --noconfirm ;;
   raspbian) apt update && apt upgrade -y ;;
-  *) echo "Unknown distro :(" ;;
+  *) me err "Unknown distro :(" ;;
 esac
