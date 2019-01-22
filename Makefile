@@ -21,7 +21,7 @@ bin/me: bin/me.in
 completions/me: completions/me.in
 	$(M4) -DLIB_ME_DIR=$(LIB_ME_DIR) $< >$@
 
-update:
+update: clean uninstall
 	$(GIT) pull origin
 
 clean:
