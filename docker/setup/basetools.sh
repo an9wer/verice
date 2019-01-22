@@ -4,6 +4,7 @@ packages=(
   m4
   make
   man-pages
+  git
   vim
   bash-completion
 )

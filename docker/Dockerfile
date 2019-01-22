@@ -16,8 +16,5 @@ RUN ${SETUP}/user.sh
 RUN ${SETUP}/basetools.sh
 
 USER an9wer:wheel
-ENV SETUP_AN9WER /home/an9wer/setup
-COPY --chown=an9wer:wheel setup_an9wer/*.sh ${SETUP_AN9WER}/
-RUN ${SETUP_AN9WER}/verice.sh
 
 EXPOSE 22

@@ -1,3 +1,3 @@
 -   [x] Completion for command me
 -   [ ] cron
--   [ ] Docker mount verice directory
+-   [x] Docker mount verice directory

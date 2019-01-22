@@ -7,5 +7,11 @@
 ## Run
 
 ```
-    sudo docker run --name verice --hostname verice -p 2222:22 -it verice /bin/bash
+    sudo docker run       \
+        --name verice     \
+        --hostname verice \
+        --publish 2222:22 \
+        --workdir /home/an9wer \
+        --mount type=bind,source=$(pwd)/..,target=/home/an9wer/verice \
+        -it verice /bin/bash
 ```
