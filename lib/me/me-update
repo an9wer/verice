@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Update system
 
 case $(me release) in
   arch) pacman -Syu --noconfirm ;;

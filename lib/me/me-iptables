@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Deal with iptables
+
+LOG=/var/log/iptables.log
+
+usage() {
+  cat <<EOF
+Usage: me-iptables [<options>]
+
+Options:
+  -l, --log      Log iptables
+  -v, --view     View iptables log
+      --log-view Log iptables and view iptables log
+  -m, --monitor  Monitor iptables
+EOF
+}
+
+log() {
+  { me info $(date)
+    iptables -vnL --line-numbers
+    echo -e "\n\n"
+  } &>> $LOG
+}
+
+view() {
+  less -R $LOG
+}
+
+monitor() {
+  # $1: Chain of iptables
+  watch -n 1 iptables --line-numbers -vnL $1
+}
+
+case $1 in
+  -l|--log    ) log ;;
+  -v|--view   ) view ;;
+  --log-view  ) log && view ;;
+  -m|--monitor) monitor $2 ;;
+  *           ) usage ;;
+esac

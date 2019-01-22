@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Check system release            
 
 [[ $(uname -s) == Linux ]] || {
   me err "Unknown system :("

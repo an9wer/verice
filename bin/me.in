@@ -10,13 +10,28 @@ ME_ANSI_MAGENTA="\e[95m"
 ME_ANSI_CYAN="\e[96m"
 ME_ANSI_WHITE="\e[97m"
 
-ME_SUBCMDS=(
-  $(find LIB_ME_DIR -name 'me-*' -printf "%f\n" | cut -c 4-) )
-ME_JOB_SUBCMDS=(
-  $(find LIB_ME_JOB_DIR -name 'me-job-*' -printf "%f\n" | cut -c 8-) )
+lib_me_dir=LIB_ME_DIR
 
-me_subcmds_filter=$(IFS='|'; echo "${ME_SUBCMDS[*]}")
-me_job_subcmds_filter=$(IFS='|'; echo "${ME_JOB_SUBCMDS[*]}")
+me_subcmds=(
+  $(find $lib_me_dir -name 'me-*' -printf "%f\n" | cut -c 4-) )
+me_subcmds_filter=$(IFS='|'; echo "${me_subcmds[*]}")
+
+usage() {
+  cat <<EOF
+Usage: me <command> [<args>]
+
+Commands:
+  info                  Display messages with level INFO
+  warn                  Display messages with level WARN
+  err                   Display messages with level ERR
+EOF
+
+  local subcmd
+  for subcmd in ${me_subcmds[@]}; do
+    printf "  %s\t\t%s\n" \
+      "$subcmd"  "$(sed -nr '2 s/#\s*(.*)/\1/p' $lib_me_dir/me-$subcmd)"
+  done
+}
 
 if [[ $1 == info ]]; then
   shift
@@ -31,10 +46,9 @@ elif [[ $1 == err ]]; then
   echo -e "${ME_ANSI_BOLD}${ME_ANSI_RED}${*}${ME_ANSI_END}"
 
 elif [[ $1 =~ $me_subcmds_filter ]]; then
-  LIB_ME_DIR/me-$1
+  $lib_me_dir/me-$1
 
-elif [[ $1 == job ]]; then
-  shift
-  [[ $1 =~ $me_job_subcmds_filter ]] && LIB_ME_JOB_DIR/me-job-$1
+else
+  usage
 
 fi

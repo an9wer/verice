@@ -3,18 +3,10 @@ _me_completion() {
   _get_comp_words_by_ref cur prev words cword
 
   ME_SUBCMDS=(
-    job
     $(find LIB_ME_DIR -name 'me-*' -printf "%f\n" | cut -c 4-) )
-  ME_JOB_SUBCMDS=(
-    $(find LIB_ME_JOB_DIR -name 'me-job-*' -printf "%f\n" | cut -c 8-) )
 
   (( $cword == 1 )) && {
     COMPREPLY=( $(compgen -W "${ME_SUBCMDS[*]}" $cur) )
-    return
-  }
-
-  (( $cword == 2 )) && [[ $prev == job ]] && {
-    COMPREPLY=( $(compgen -W "${ME_JOB_SUBCMDS[*]}" $cur) )
     return
   }
 }

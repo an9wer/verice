@@ -1,3 +1,3 @@
--   [x] Dynamic directory to install
 -   [x] Completion for command me
--   [x] Docker
+-   [ ] cron
+-   [ ] Docker mount verice directory
