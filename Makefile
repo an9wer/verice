@@ -1,8 +1,9 @@
 prefix ?= /usr/local
 BIN_DIR = $(prefix)/bin
 LIB_ME_DIR = $(prefix)/lib/me
-PROFILE_DIR = /etc/profile.d
 COMPLETOINS_DIR = $(prefix)/share/bash-completion/completions
+PROFILE_DIR = /etc/profile.d
+ME_GITHUB_DIR = /etc/me-github.d
 
 M4 := m4
 RM := rm
@@ -29,14 +30,13 @@ clean:
 	$(RM) -f completions/me
 
 install:
-	mkdir -p $(BIN_DIR)
-	mkdir -p $(LIB_ME_DIR)
-	mkdir -p $(PROFILE_DIR)
-	mkdir -p $(COMPLETOINS_DIR)
-	$(INSTALL) -m 755 bin/me $(BIN_DIR)
-	$(INSTALL) -m 755 lib/me/* $(LIB_ME_DIR)
-	$(INSTALL) -m 644 etc/profile.d/me.sh $(PROFILE_DIR)/me.sh
-	$(INSTALL) -m 644 completions/me $(COMPLETOINS_DIR)/me
+	$(INSTALL) -d $(BIN_DIR) && $(INSTALL) -m 755 bin/me $(BIN_DIR)
+	$(INSTALL) -d $(LIB_ME_DIR) && $(INSTALL) -m 755 lib/me/* $(LIB_ME_DIR)
+	$(INSTALL) -d $(PROFILE_DIR) && $(INSTALL) -m 644 etc/profile.d/me.sh $(PROFILE_DIR)
+	$(INSTALL) -d $(COMPLETOINS_DIR) && $(INSTALL) -m 644 completions/me $(COMPLETOINS_DIR)
+	$(INSTALL) -d $(ME_GITHUB_DIR) && $(INSTALL) -m 644 etc/me-github.d/* $(ME_GITHUB_DIR)
+	$(INSTALL) -m 644 etc/me-github.conf /etc
+	$(INSTALL) -b -m 644 etc/gitconfig /etc
 
 uninstall:
 	rm -f $(BIN_DIR)/me

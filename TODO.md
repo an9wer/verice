@@ -1,3 +1,5 @@
 -   [x] Completion for command me
--   [ ] cron
 -   [x] Docker mount verice directory
+-   [ ] cron
+-   [ ] Uninstall configuration files
+-   [ ] Use github api (token) to pull and push repository

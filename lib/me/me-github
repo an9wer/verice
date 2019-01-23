@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Sync githup repository from upstream to origin
+
+set -e
+
+source /etc/me-github.conf
+LOG=/var/log/me-github.log
+
+usage() {
+  cat <<EOF
+Usage: me-github [<options>]
+
+Options:
+  -l, --log      Run and write output into log file
+  -v, --view-log Display log file
+EOF
+
+}
+
+log() {
+  for conf in \
+      $(find /etc/me-github.d -name '*.conf' ! -name 'example.conf'); do
+
+    unset ORIGIN_URL UPSTREAM_URL REPO_NAME
+    source "$conf"
+
+    me info $(date)
+
+    # Verify variable
+    [[ -z $ORIGIN_URL ]] && me err "Unset 'ORIGIN_URL' :("
+    [[ -z $UPSTREAM_URL ]] && me err "Unset 'UPSTREAM_URL' :("
+    if [[ -z $REPO_NAME ]]; then
+      repo_dir=$CACHE_DIR/$(basename -s '.git' $ORIGIN_URL)
+    else
+      repo_dir="$CACHE_DIR/$REPO_NAME"
+    fi
+
+    # Clone repository
+    if [[ ! -d "$repo_dir" ]]; then
+      git clone --branch master --single-branch "$ORIGIN_URL" "$repo_dir"
+    fi
+    if [[ -d "$repo_dir" && ! -d "$repo_dir"/.git ]]; then
+      me err "'$repo_dir' has already existed and is not a git repository :("
+      continue
+    fi
+
+    # Set remote of repository
+    cd "$repo_dir"
+    if [[ -n $(git remote | grep -E '^upstream$') ]]; then
+      git remote set-url upstream "$UPSTREAM_URL"
+    else
+      git remote add upstream "$UPSTREAM_URL"
+    fi
+
+    # Update repository
+    git pull upstream master
+    git push origin master
+    cd -
+
+    echo -e "\n\n"
+
+  done
+}
+
+# main
+[[ ! -f "$CACHE_DIR" ]] && mkdir -p "$CACHE_DIR"
+case $1 in
+  -l|--log      ) log 2>&1 | tee -a $LOG ;;
+  -v|--view-log ) less -R $LOG ;;
+  *             ) usage ;;
+esac
