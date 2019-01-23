@@ -12,7 +12,7 @@ Usage: me-github [<options>]
 
 Options:
   -l, --log      Run and write output into log file
-  -v, --view-log Display log file
+  -v, --view-log View the content of log file
 EOF
 
 }
