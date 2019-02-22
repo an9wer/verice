@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sync githup repository from upstream to origin
+# Synchronous upstream git repository
 
 set -e
 

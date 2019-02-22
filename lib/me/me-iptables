@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deal with iptables
+# Log and monitor iptables
 
 LOG=/var/log/iptables.log
 
