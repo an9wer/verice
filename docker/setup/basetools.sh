@@ -7,6 +7,7 @@ packages=(
   git
   vim
   bash-completion
+  python3
 )
 
 pacman -Sy --needed --noconfirm ${packages[@]}

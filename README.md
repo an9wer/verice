@@ -1,14 +1,14 @@
 # Verice
 
-Scripts to manage linux server.
+Scripts to manage linux server, which only support archlinux now.
 
-Only support archlinux now, you can try it from [docker](docker).
 
 ## Usage
 
-Install:
+Install (then run command `me` to find more):
 
     make && make install
 
-After that, run command `me` to find more.
+
+You can also try it from [docker](docker).
 

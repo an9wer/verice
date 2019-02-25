@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+usage() {
+  cat <<EOF
+Usage: me-list-conf <conf_dir>
+
+Arguments:
+  conf_dir    Configration directory
+EOF
+}
+
+list_conf() {
+  if me list-conf-dir | grep -E "^$1$" &>/dev/null; then
+    find "/etc/me-$1.d" \
+      -maxdepth 1 -type f -name '*.conf' ! -name "example.conf" \
+      -exec basename -s .conf {} \;
+  else
+    echo "Configuration directory '$1' doesn't exist."
+    exit 1
+  fi
+}
+
+# Main
+case $1 in
+  ''   ) usage ;;
+  *    ) list_conf "$1" ;;
+esac
+

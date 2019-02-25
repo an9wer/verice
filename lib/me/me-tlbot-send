@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+# Send message by telegram bot
+
+import sys
+import os.path
+import telegram
+
+__dir__ = os.path.dirname(__file__)
+conf_var = {"TOKEN", "CHAT_ID"}
+
+
+def die(msg):
+    print(msg)
+    sys.exit(1)
+
+
+def parse_args():
+    global conf
+
+    # Echo usage
+    if len(sys.argv) <= 4 and sys.argv[1] != "-c":
+        die("Usage: tlbot-send -c <conf> <msg>...\n\n"
+            "Arguments:\n"
+            "  conf     configuration file\n"
+            "  msg      messages to be sent")
+
+    conf = sys.argv[2]
+    if not os.path.isfile(conf):
+        die("Cannot find configuration file '%s'." % conf)
+
+def parse_conf():
+    exec(open(conf).read())
+    if not conf_var.issubset(locals()):
+        die("Need to set '%s' and '%s' variable in configuration file '%s'." %
+            (tuple(conf_var) + (conf,)))
+    for var in conf_var:
+        globals()[var] = locals()[var]
+
+def tlbot_send():
+    bot = telegram.Bot(TOKEN)
+    bot.send_message(chat_id=CHAT_ID, text=' '.join(sys.argv[3:]))
+
+if __name__ == "__main__":
+    parse_args()
+    parse_conf()
+    tlbot_send()
+

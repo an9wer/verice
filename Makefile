@@ -4,16 +4,19 @@ LIB_ME_DIR = $(prefix)/lib/me
 COMPLETOINS_DIR = $(prefix)/share/bash-completion/completions
 PROFILE_DIR = /etc/profile.d
 ME_GITHUB_DIR = /etc/me-github.d
+ME_DARKSKY_DIR = /etc/me-darksky.d
+ME_TLBOT_DIR = /etc/me-tlbot-send.d
 
 M4 := m4
 RM := rm
 GIT := git
 CHMOD := chmod
 INSTALL := install
+PYTHON := python3
 
 .PHONY: build update install uninstall
 
-build: bin/me completions/me
+build: bin/me completions/me venv
 
 bin/me: bin/me.in
 	$(M4) -DLIB_ME_DIR=$(LIB_ME_DIR) $< >$@
@@ -21,6 +24,10 @@ bin/me: bin/me.in
 
 completions/me: completions/me.in
 	$(M4) -DLIB_ME_DIR=$(LIB_ME_DIR) $< >$@
+
+venv: requirements.txt
+	$(PYTHON) -m venv venv
+	venv/bin/pip install -r requirements.txt
 
 update: clean uninstall
 	$(GIT) pull origin
@@ -35,6 +42,8 @@ install:
 	$(INSTALL) -d $(PROFILE_DIR) && $(INSTALL) -m 644 etc/profile.d/me.sh $(PROFILE_DIR)
 	$(INSTALL) -d $(COMPLETOINS_DIR) && $(INSTALL) -m 644 completions/me $(COMPLETOINS_DIR)
 	$(INSTALL) -d $(ME_GITHUB_DIR) && $(INSTALL) -m 644 etc/me-github.d/* $(ME_GITHUB_DIR)
+	$(INSTALL) -d $(ME_DARKSKY_DIR) && $(INSTALL) -m 644 etc/me-darksky.d/* $(ME_DARKSKY_DIR)
+	$(INSTALL) -d $(ME_TLBOT_DIR) && $(INSTALL) -m 644 etc/me-tlbot-send.d/* $(ME_TLBOT_DIR)
 	$(INSTALL) -m 644 etc/me-github.conf /etc
 	$(INSTALL) -b -m 644 etc/gitconfig /etc
 

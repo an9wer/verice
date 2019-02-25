@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+IFS=$'\n'
+for dir in $(find /etc -maxdepth 1 -name 'me-*.d' -type d -printf "%f\n"); do
+  printf "%s\n" "$(sed -nr 's@^me-(.*)\.d$@\1@p' <<< $dir)"
+done
+

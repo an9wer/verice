@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Add new configuration file
+
+usage() {
+  cat <<EOF
+Usage: me-new-conf <conf_dir>
+
+Arguments:
+  conf_dir    Configuration directory
+EOF
+}
+
+new_conf() {
+  local conf sure
+  local conf_temp=$(mktemp)
+  local editor=${EDITOR:-nano}
+  if ! me list-conf-dir | grep -E "^$1$" &>/dev/null; then
+    echo "Configuration directory '$1' doesn't exist."
+    exit 1
+  fi
+
+  read -p "Name of your configuration file: " conf
+  if me list-conf "$1" | grep -E "^$conf$" &>/dev/null; then
+    echo "Configuration file '$conf' has been existed."
+    exit 1
+  fi
+
+  cp -f "/etc/me-$1.d/example.conf" "$conf_temp"
+  "$editor" "$conf_temp"
+
+  for ((;;)); do
+    read -p "Do you want to save your modification? [y/n]: " sure
+    if [[ $sure =~ [Yy] ]]; then
+      mv "$conf_temp" "/etc/me-$1.d/$conf.conf"
+      echo "Succeed to create file '/etc/me-$1.d/$conf.conf'."
+      break
+    elif [[ $sure =~ [Nn] ]]; then
+      echo "Ignore your modification."
+      break
+    fi
+  done
+}
+
+# Main
+case $1 in
+  '' ) usage ;;
+  *  ) new_conf "$1" "$2" ;;
+esac
+

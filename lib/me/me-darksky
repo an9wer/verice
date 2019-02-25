@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import json
+import pprint
+import datetime
+import subprocess
+import urllib.request
+
+CONF_DIR = "/etc/me-darksky.d"
+CONF_VAR = {"KEY", "LANG", "LATITUDE", "LONGTITUDE", "UNITS"}
+API_URL = "https://api.darksky.net/forecast/{KEY}/{LATITUDE},{LONGTITUDE}?lang={LANG}&units={UNITS}"
+
+def die(msg):
+    print(msg)
+    sys.exit(1)
+
+
+def usage():
+        die(
+"""Usage: me-darksky [<options>]
+
+Options:
+  -l, --list-conf           List all configuration files
+  -n, --new-conf            Create a new configuration file
+  -v, --view-conf <conf>    Display content of a specified configuration file
+  -u, --update-conf <conf>  Update an existed configuration file
+  -d, --delete-conf <conf>  Delete an existed configuration file
+  -c <conf>                 Run from an existed configuration file""")
+
+def parse_conf():
+    global report
+    exec(open(conf).read())
+
+    if not(CONF_VAR.issubset(locals())):
+        die("")
+
+    for var in CONF_VAR:
+        globals()[var] = locals()[var]
+
+    if LANG == "en":
+        report = (
+            "{date} weather: {summary} "
+            "Maximum temperature is {temperatureMax}°C around at {temperatureMaxTime}, "
+            "Minmum temperature is {temperatureMin}°C around at {temperatureMinTime}. "
+            "Time of sunrise is {sunriseTime}, time of sunset is {sunsetTime}.")
+    elif LANG == "zh":
+        report = (
+            "{date} 天气：{summary}"
+            "{temperatureMaxTime}点气温最高为{temperatureMax}°C，"
+            "{temperatureMinTime}点气温最低为{temperatureMin}°C。"
+            "日出为{sunriseTime}，日落为{sunsetTime}。")
+    else:
+        die("Unknown value of configuration variable 'LANG': %s." % str(LANG))
+
+    if UNITS not in ["auto", "ca", "uk2", "us", "si"]:
+        die("Unknown value of configuration variable 'UNITS': %s." % str(UNITS))
+
+    if type(LATITUDE) not in [int, float]:
+        die("Type of configuration variable 'LATITUDE' must be int.")
+
+    if LATITUDE > 90 or LATITUDE < -90:
+        die("Value of configuration variable 'LATITUDE' is out of range: %s." %
+            str(LATITUDE))
+
+    if type(LONGTITUDE) not in [int, float]:
+        die("Type of configuration variable 'LONGTITUDE' must be int.")
+
+    if LONGTITUDE > 180 or LONGTITUDE < -180:
+        die("Value of configuration variable 'LATITUDE' is out of range: %s." %
+            str(LATITUDE))
+
+def parse_data():
+    ts2h = lambda ts: datetime.datetime.fromtimestamp(ts).strftime("%H")
+    ts2hm = lambda ts: datetime.datetime.fromtimestamp(ts).strftime("%H:%M")
+
+    with urllib.request.urlopen(API_URL.format(**globals())) as resp:
+        data = json.loads(resp.read())
+        daily = data["daily"]["data"][0]
+        print(report.format(**{
+            "date": datetime.datetime.now().strftime("%m/%d"),
+            "summary": daily["summary"],
+            "temperatureMax": daily["temperatureMax"],
+            "temperatureMaxTime": ts2h(daily["temperatureMaxTime"]),
+            "temperatureMin": daily["temperatureMin"],
+            "temperatureMinTime": ts2h(daily["temperatureMinTime"]),
+            "sunsetTime": ts2hm(daily["sunsetTime"]),
+            "sunriseTime": ts2hm(daily["sunriseTime"]),
+        }))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        usage()
+
+    if sys.argv[1] in ["-l", "--list-conf"]:
+        subprocess.run(["me", "list-conf", "darksky"])
+
+    elif sys.argv[1] in ["-n", "--new-conf"]:
+        subprocess.run(["me", "new-conf", "darksky"])
+
+    elif sys.argv[1] in ["-v", "--view-conf"]:
+        subprocess.run(["me", "view-conf", "darksky", sys.argv[2]])
+
+    elif sys.argv[1] in ["-u", "--update-conf"]:
+        subprocess.run(["me", "update-conf", "darksky", sys.argv[2]])
+
+    elif sys.argv[1] in ["-d", "--delete-conf"]:
+        subprocess.run(["me", "delete-conf", "darksky", sys.argv[2]])
+
+    elif sys.argv[1] in ["-c"]:
+        conf = os.path.join(CONF_DIR, sys.argv[2] + ".conf")
+        if not os.path.isfile(conf):
+            die("Cannot find configuration file '%s'." % conf)
+
+        parse_conf()
+        parse_data()
+
+    else:
+        die("Unknown options.")
+
