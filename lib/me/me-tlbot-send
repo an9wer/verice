@@ -3,45 +3,71 @@
 
 import sys
 import os.path
+import subprocess
 import telegram
 
-__dir__ = os.path.dirname(__file__)
-conf_var = {"TOKEN", "CHAT_ID"}
+CONF_DIR = "/etc/me-tlbot-send.d"
+CONF_VAR = {"TOKEN", "CHAT_ID"}
 
 
 def die(msg):
     print(msg)
     sys.exit(1)
 
+def usage():
+    die(
+"""Usage: tlbot-send [<options>] [<conf> [<msg>...]]
 
-def parse_args():
-    global conf
-
-    # Echo usage
-    if len(sys.argv) <= 4 and sys.argv[1] != "-c":
-        die("Usage: tlbot-send -c <conf> <msg>...\n\n"
-            "Arguments:\n"
-            "  conf     configuration file\n"
-            "  msg      messages to be sent")
-
-    conf = sys.argv[2]
-    if not os.path.isfile(conf):
-        die("Cannot find configuration file '%s'." % conf)
+Options:
+  -l, --list-conf           List all configuration files
+  -n, --new-conf            Create a new configuration file
+  -v, --view-conf <conf>    Display content of a specified configuration file
+  -u, --update-conf <conf>  Update an existed configuration file
+  -d, --delete-conf <conf>  Delete an existed configuration file
+  -c <conf> <msg>           Send message according to an existed configuration file""")
 
 def parse_conf():
     exec(open(conf).read())
-    if not conf_var.issubset(locals()):
-        die("Need to set '%s' and '%s' variable in configuration file '%s'." %
-            (tuple(conf_var) + (conf,)))
-    for var in conf_var:
+    if not CONF_VAR.issubset(locals()):
+        die("Lack of some required variables.")
+
+    for var in CONF_VAR:
         globals()[var] = locals()[var]
+
+    if type(TOKEN) is not str:
+        die("Type of configuration variable 'TOKEN' must be string.")
+
+    if type(CHAT_ID) not in [int, float]:
+        die("Type of configuration variable 'CHAT_ID' must be int or float.")
 
 def tlbot_send():
     bot = telegram.Bot(TOKEN)
     bot.send_message(chat_id=CHAT_ID, text=' '.join(sys.argv[3:]))
 
+
 if __name__ == "__main__":
-    parse_args()
-    parse_conf()
-    tlbot_send()
+    if len(sys.argv) == 2 and sys.argv[1] in ["-l", "--list-conf"]:
+        subprocess.run(["me", "list-conf", "tlbot-send"])
+
+    elif len(sys.argv) == 2 and sys.argv[1] in ["-n", "--new-conf"]:
+        subprocess.run(["me", "new-conf", "tlbot-send"])
+
+    elif len(sys.argv) == 3 and sys.argv[1] in ["-v", "--view-conf"]:
+        subprocess.run(["me", "view-conf", "tlbot-send", sys.argv[2]])
+
+    elif len(sys.argv) == 3 and sys.argv[1] in ["-e", "--edit-conf"]:
+        subprocess.run(["me", "edit-conf", "tlbot-send", sys.argv[2]])
+
+    elif len(sys.argv) == 3 and sys.argv[1] in ["-d", "--delete-conf"]:
+        subprocess.run(["me", "delete-conf", "tlbot-send", sys.argv[2]])
+
+    elif len(sys.argv) >= 3 and sys.argv[1] in ["-c"]:
+        conf = os.path.join(CONF_DIR, sys.argv[2] + ".conf")
+        if not os.path.isfile(conf):
+            die("Cannot find configuration file '%s'." % conf)
+
+        parse_conf()
+        tlbot_send()
+    else:
+        usage()
 

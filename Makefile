@@ -9,6 +9,7 @@ ME_TLBOT_DIR = /etc/me-tlbot-send.d
 
 M4 := m4
 RM := rm
+LN := ln
 GIT := git
 CHMOD := chmod
 INSTALL := install
@@ -52,3 +53,4 @@ uninstall:
 	rm -f $(PROFILE_DIR)/me.sh
 	rm -f $(COMPLETOINS_DIR)/me
 	rm -rf $(LIB_ME_DIR)
+

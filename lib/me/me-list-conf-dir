@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# List all configuration directories of me-<subcommand>
 
 IFS=$'\n'
 for dir in $(find /etc -maxdepth 1 -name 'me-*.d' -type d -printf "%f\n"); do

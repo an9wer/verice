@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Weather report
 
 import os
 import sys
@@ -34,23 +35,33 @@ def parse_conf():
     exec(open(conf).read())
 
     if not(CONF_VAR.issubset(locals())):
-        die("")
+        die("Lack of some required variables.")
 
     for var in CONF_VAR:
         globals()[var] = locals()[var]
 
     if LANG == "en":
         report = (
-            "{date} weather: {summary} "
+            "{date} weather ({icon}): {summary} "
+            "Direction of wind is {windBearing}, speed of wind is {windSpeed}km/h."
             "Maximum temperature is {temperatureMax}°C around at {temperatureMaxTime}, "
             "Minmum temperature is {temperatureMin}°C around at {temperatureMinTime}. "
-            "Time of sunrise is {sunriseTime}, time of sunset is {sunsetTime}.")
+            "Time of sunrise is {sunriseTime}, time of sunset is {sunsetTime}."
+            "Moon phase (0-1) is {moonPhase}."
+            "Humidity (0-1) is {humidity}."
+            "Sky occluded by clouds (0-1) is {cloudCover}."
+            "Precipitation intensity is {precipIntensity}.")
     elif LANG == "zh":
         report = (
-            "{date} 天气：{summary}"
+            "{date} 天气 ({icon})： {summary}"
+            "{windBearing}风{windSpeed}km/h。"
             "{temperatureMaxTime}点气温最高为{temperatureMax}°C，"
             "{temperatureMinTime}点气温最低为{temperatureMin}°C。"
-            "日出为{sunriseTime}，日落为{sunsetTime}。")
+            "日出为{sunriseTime}，日落为{sunsetTime}。"
+            "月相 (0-1) 为 {moonPhase}。"
+            "湿度 (0-1) 为 {humidity}。"
+            "云层 (0-1) 为 {cloudCover}。"
+            "降水量密度为 {precipIntensity}mm/h。")
     else:
         die("Unknown value of configuration variable 'LANG': %s." % str(LANG))
 
@@ -58,58 +69,82 @@ def parse_conf():
         die("Unknown value of configuration variable 'UNITS': %s." % str(UNITS))
 
     if type(LATITUDE) not in [int, float]:
-        die("Type of configuration variable 'LATITUDE' must be int.")
+        die("Type of configuration variable 'LATITUDE' must be int or float.")
 
     if LATITUDE > 90 or LATITUDE < -90:
         die("Value of configuration variable 'LATITUDE' is out of range: %s." %
             str(LATITUDE))
 
     if type(LONGTITUDE) not in [int, float]:
-        die("Type of configuration variable 'LONGTITUDE' must be int.")
+        die("Type of configuration variable 'LONGTITUDE' must be int or float.")
 
     if LONGTITUDE > 180 or LONGTITUDE < -180:
         die("Value of configuration variable 'LATITUDE' is out of range: %s." %
             str(LATITUDE))
 
+def wind_direction(wind_bearing, lang="en"):
+    direction = ""
+
+    if 0 < wind_bearing < 180:
+        if lang == "en": direction += "East"
+        elif lang == "zh" : direction += "东"
+    elif 180 < wind_bearing < 360:
+        if lang == "en": direction += "West"
+        elif lang == "zh" : direction += "西"
+
+    if 0 < wind_bearing < 90 or 270 < wind_bearing < 360:
+        if lang == "en": direction = "North" + direction
+        elif lang == "zh" : direction += "北"
+    elif 90 < wind_bearing < 270:
+        if lang == "en": direction = "Sourth" + direction
+        elif lang == "zh" : direction += "南"
+
+    return direction or wind_bearing
+
 def parse_data():
-    ts2h = lambda ts: datetime.datetime.fromtimestamp(ts).strftime("%H")
-    ts2hm = lambda ts: datetime.datetime.fromtimestamp(ts).strftime("%H:%M")
+    tz = datetime.timezone(datetime.timedelta(hours=globals()["LONGTITUDE"] // 15))
+    ts2h = lambda ts: datetime.datetime.fromtimestamp(ts, tz=tz).strftime("%H")
+    ts2hm = lambda ts: datetime.datetime.fromtimestamp(ts, tz=tz).strftime("%H:%M")
 
     with urllib.request.urlopen(API_URL.format(**globals())) as resp:
         data = json.loads(resp.read())
         daily = data["daily"]["data"][0]
         print(report.format(**{
             "date": datetime.datetime.now().strftime("%m/%d"),
+            "icon": daily["icon"],
             "summary": daily["summary"],
-            "temperatureMax": daily["temperatureMax"],
-            "temperatureMaxTime": ts2h(daily["temperatureMaxTime"]),
-            "temperatureMin": daily["temperatureMin"],
-            "temperatureMinTime": ts2h(daily["temperatureMinTime"]),
+            "temperatureMax": daily["apparentTemperatureMax"],
+            "temperatureMaxTime": ts2h(daily["apparentTemperatureMaxTime"]),
+            "temperatureMin": daily["apparentTemperatureMin"],
+            "temperatureMinTime": ts2h(daily["apparentTemperatureMinTime"]),
             "sunsetTime": ts2hm(daily["sunsetTime"]),
             "sunriseTime": ts2hm(daily["sunriseTime"]),
+            "windSpeed": daily["windSpeed"],
+            "windBearing": wind_direction(daily["windBearing"], lang=globals()["LANG"]),
+            "humidity": daily["humidity"],
+            "moonPhase": daily["moonPhase"],
+            "cloudCover": daily["cloudCover"],
+            "precipIntensity": daily["precipIntensity"],
         }))
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        usage()
-
-    if sys.argv[1] in ["-l", "--list-conf"]:
+    if len(sys.argv) == 2 and sys.argv[1] in ["-l", "--list-conf"]:
         subprocess.run(["me", "list-conf", "darksky"])
 
-    elif sys.argv[1] in ["-n", "--new-conf"]:
+    elif len(sys.argv) == 2 and sys.argv[1] in ["-n", "--new-conf"]:
         subprocess.run(["me", "new-conf", "darksky"])
 
-    elif sys.argv[1] in ["-v", "--view-conf"]:
+    elif len(sys.argv) == 3 and sys.argv[1] in ["-v", "--view-conf"]:
         subprocess.run(["me", "view-conf", "darksky", sys.argv[2]])
 
-    elif sys.argv[1] in ["-u", "--update-conf"]:
-        subprocess.run(["me", "update-conf", "darksky", sys.argv[2]])
+    elif len(sys.argv) == 3 and sys.argv[1] in ["-e", "--edit-conf"]:
+        subprocess.run(["me", "edit-conf", "darksky", sys.argv[2]])
 
-    elif sys.argv[1] in ["-d", "--delete-conf"]:
+    elif len(sys.argv) == 3 and sys.argv[1] in ["-d", "--delete-conf"]:
         subprocess.run(["me", "delete-conf", "darksky", sys.argv[2]])
 
-    elif sys.argv[1] in ["-c"]:
+    elif len(sys.argv) == 3 and sys.argv[1] in ["-c"]:
         conf = os.path.join(CONF_DIR, sys.argv[2] + ".conf")
         if not os.path.isfile(conf):
             die("Cannot find configuration file '%s'." % conf)
@@ -118,5 +153,5 @@ if __name__ == "__main__":
         parse_data()
 
     else:
-        die("Unknown options.")
+        usage()
 

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
+# List all configuration files of specified me-<subcommand>
 
 usage() {
   cat <<EOF
 Usage: me-list-conf <conf_dir>
 
 Arguments:
-  conf_dir    Configration directory
+  conf_dir    Configuration directory
 EOF
 }
 

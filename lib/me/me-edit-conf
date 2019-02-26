@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Update configuration file
+# Edit configuration file
 
 usage() {
   cat <<EOF
@@ -32,6 +32,7 @@ update_conf() {
     read -p "Do you want to save your modification? [y/n]: " sure
     if [[ $sure =~ [Yy] ]]; then
       mv "$conf_temp" "/etc/me-$1.d/$2.conf"
+      chmod 644 "/etc/me-$1.d/$2.conf"
       echo "Succeed to create file '/etc/me-$1.d/$2.conf'."
       break
     elif [[ $sure =~ [Nn] ]]; then
