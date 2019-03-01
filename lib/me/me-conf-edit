@@ -13,7 +13,7 @@ EOF
 
 update_conf() {
   local sure
-  local conf_temp=$(mktemp)
+  local conf_temp=$(mktemp -p /tmp me-edit-conf.XXXXXX)
   local editor=${EDITOR:-nano}
 
   if ! me list-conf-dir | grep -E "^$1$" &>/dev/null; then

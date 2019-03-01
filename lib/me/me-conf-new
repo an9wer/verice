@@ -12,7 +12,7 @@ EOF
 
 new_conf() {
   local conf sure
-  local conf_temp=$(mktemp)
+  local conf_temp=$(mktemp -p /tmp me-new-conf.XXXXXX)
   local editor=${EDITOR:-nano}
   if ! me list-conf-dir | grep -E "^$1$" &>/dev/null; then
     echo "Configuration directory '$1' doesn't exist."

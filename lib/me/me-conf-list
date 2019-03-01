@@ -23,7 +23,7 @@ list_conf() {
 
 # Main
 case $1 in
-  ''   ) usage ;;
-  *    ) list_conf "$1" ;;
+  ''  ) usage ;;
+  *   ) list_conf "$1" ;;
 esac
 

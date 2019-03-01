@@ -24,6 +24,7 @@ Options:
   -v, --view-conf <conf>    Display content of a specified configuration file
   -u, --update-conf <conf>  Update an existed configuration file
   -d, --delete-conf <conf>  Delete an existed configuration file
+  -r, --rename-conf <conf>  Rename an existed configuration file
   -c <conf> <msg>           Send message according to an existed configuration file""")
 
 def parse_conf():
@@ -47,19 +48,22 @@ def tlbot_send():
 
 if __name__ == "__main__":
     if len(sys.argv) == 2 and sys.argv[1] in ["-l", "--list-conf"]:
-        subprocess.run(["me", "list-conf", "tlbot-send"])
+        subprocess.run(["me", "conf-list", "tlbot-send"])
 
     elif len(sys.argv) == 2 and sys.argv[1] in ["-n", "--new-conf"]:
-        subprocess.run(["me", "new-conf", "tlbot-send"])
+        subprocess.run(["me", "conf-new", "tlbot-send"])
 
     elif len(sys.argv) == 3 and sys.argv[1] in ["-v", "--view-conf"]:
-        subprocess.run(["me", "view-conf", "tlbot-send", sys.argv[2]])
+        subprocess.run(["me", "conf-view", "tlbot-send", sys.argv[2]])
 
     elif len(sys.argv) == 3 and sys.argv[1] in ["-e", "--edit-conf"]:
-        subprocess.run(["me", "edit-conf", "tlbot-send", sys.argv[2]])
+        subprocess.run(["me", "conf-edit", "tlbot-send", sys.argv[2]])
 
     elif len(sys.argv) == 3 and sys.argv[1] in ["-d", "--delete-conf"]:
-        subprocess.run(["me", "delete-conf", "tlbot-send", sys.argv[2]])
+        subprocess.run(["me", "conf-delete", "tlbot-send", sys.argv[2]])
+
+    elif len(sys.argv) == 3 and sys.argv[1] in ["-r", "--rename-conf"]:
+        subprocess.run(["me", "conf-rename", "tlbot-send", sys.argv[2]])
 
     elif len(sys.argv) >= 3 and sys.argv[1] in ["-c"]:
         conf = os.path.join(CONF_DIR, sys.argv[2] + ".conf")
@@ -68,6 +72,7 @@ if __name__ == "__main__":
 
         parse_conf()
         tlbot_send()
+
     else:
         usage()
 

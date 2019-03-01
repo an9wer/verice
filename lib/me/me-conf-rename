@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Rename configuration file name
+
+usage() {
+  cat <<EOF
+Usage: me-rename-conf <conf_dir> <conf> [<name>]
+
+Arguments:
+  conf_dir    Configuration directory
+  conf        Configuration file
+  name        Name to be set
+EOF
+}
+
+rename_conf() {
+  local name
+  if ! me list-conf-dir | grep -E "^$1$" &>/dev/null; then
+    echo "Configuration directory '$1' doesn't exist."
+    exit 1
+  fi
+
+  if ! me list-conf "$1" | grep -E "^$2$" &>/dev/null; then
+    echo "Configuration file '$2' doesn't exist."
+    exit 1
+  fi
+
+  if [[ -z $3 ]]; then
+    for ((;;)); do
+      read -p "Name you want to set: " name
+      [[ -n $name ]] && break
+    done
+  else
+    name=$3
+  fi
+  mv "/etc/me-$1.d/$2.conf" "/etc/me-$1.d/$name.conf"
+  echo "/etc/me-$1.d/$2.conf -> /etc/me-$1.d/$name.conf"
+}
+
+# Main
+case $1 in
+  '' ) usage ;;
+  *  ) rename_conf "$1" "$2" "$3" ;;
+esac

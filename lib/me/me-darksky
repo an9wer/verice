@@ -4,7 +4,6 @@
 import os
 import sys
 import json
-import pprint
 import datetime
 import subprocess
 import urllib.request
@@ -28,6 +27,7 @@ Options:
   -v, --view-conf <conf>    Display content of a specified configuration file
   -u, --update-conf <conf>  Update an existed configuration file
   -d, --delete-conf <conf>  Delete an existed configuration file
+  -r, --rename-conf <conf>  Rename an existed configuration file
   -c <conf>                 Run from an existed configuration file""")
 
 def parse_conf():
@@ -130,19 +130,22 @@ def parse_data():
 
 if __name__ == "__main__":
     if len(sys.argv) == 2 and sys.argv[1] in ["-l", "--list-conf"]:
-        subprocess.run(["me", "list-conf", "darksky"])
+        subprocess.run(["me", "conf-list", "darksky"])
 
     elif len(sys.argv) == 2 and sys.argv[1] in ["-n", "--new-conf"]:
-        subprocess.run(["me", "new-conf", "darksky"])
+        subprocess.run(["me", "conf-new", "darksky"])
 
     elif len(sys.argv) == 3 and sys.argv[1] in ["-v", "--view-conf"]:
-        subprocess.run(["me", "view-conf", "darksky", sys.argv[2]])
+        subprocess.run(["me", "conf-view", "darksky", sys.argv[2]])
 
     elif len(sys.argv) == 3 and sys.argv[1] in ["-e", "--edit-conf"]:
-        subprocess.run(["me", "edit-conf", "darksky", sys.argv[2]])
+        subprocess.run(["me", "conf-edit", "darksky", sys.argv[2]])
 
     elif len(sys.argv) == 3 and sys.argv[1] in ["-d", "--delete-conf"]:
-        subprocess.run(["me", "delete-conf", "darksky", sys.argv[2]])
+        subprocess.run(["me", "conf-delete", "darksky", sys.argv[2]])
+
+    elif len(sys.argv) == 3 and sys.argv[1] in ["-r", "--rename-conf"]:
+        subprocess.run(["me", "conf-rename", "darksky", sys.argv[2]])
 
     elif len(sys.argv) == 3 and sys.argv[1] in ["-c"]:
         conf = os.path.join(CONF_DIR, sys.argv[2] + ".conf")
