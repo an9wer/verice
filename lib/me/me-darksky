@@ -26,7 +26,7 @@ Options:
   -l, --list-conf           List all configuration files
   -n, --new-conf            Create a new configuration file
   -v, --view-conf <conf>    Display content of a specified configuration file
-  -u, --update-conf <conf>  Update an existed configuration file
+  -e, --edit-conf <conf>    Edit an existed configuration file
   -d, --delete-conf <conf>  Delete an existed configuration file
   -r, --rename-conf <conf>  Rename an existed configuration file
   -c <conf>                 Run from an existed configuration file""")
