@@ -4,6 +4,7 @@
 import os
 import sys
 import json
+import locale
 import datetime
 import subprocess
 import urllib.request
@@ -42,26 +43,30 @@ def parse_conf():
 
     if LANG == "en":
         report = (
-            "{date} weather ({icon}): {summary} "
+            "{date} ({icon}): {summary} "
             "Direction of wind is {windBearing}, speed of wind is {windSpeed}km/h."
-            "Maximum temperature is {temperatureMax}°C around at {temperatureMaxTime}, "
             "Minmum temperature is {temperatureMin}°C around at {temperatureMinTime}. "
+            "Maximum temperature is {temperatureMax}°C around at {temperatureMaxTime}, "
             "Time of sunrise is {sunriseTime}, time of sunset is {sunsetTime}."
             "Moon phase (0-1) is {moonPhase}."
             "Humidity (0-1) is {humidity}."
             "Sky occluded by clouds (0-1) is {cloudCover}."
             "Precipitation intensity is {precipIntensity}.")
+        try: locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+        except locale.Error: pass
     elif LANG == "zh":
         report = (
-            "{date} 天气 ({icon})： {summary}"
+            "{date} ({icon})： {summary}"
             "{windBearing}风{windSpeed}km/h。"
-            "{temperatureMaxTime}点气温最高为{temperatureMax}°C，"
             "{temperatureMinTime}点气温最低为{temperatureMin}°C。"
+            "{temperatureMaxTime}点气温最高为{temperatureMax}°C，"
             "日出为{sunriseTime}，日落为{sunsetTime}。"
             "月相 (0-1) 为 {moonPhase}。"
             "湿度 (0-1) 为 {humidity}。"
             "云层 (0-1) 为 {cloudCover}。"
             "降水量密度为 {precipIntensity}mm/h。")
+        try: locale.setlocale(locale.LC_ALL, "zh_CN.UTF-8")
+        except locale.Error: pass
     else:
         die("Unknown value of configuration variable 'LANG': %s." % str(LANG))
 
@@ -110,7 +115,7 @@ def parse_data():
         data = json.loads(resp.read())
         daily = data["daily"]["data"][0]
         print(report.format(**{
-            "date": datetime.datetime.now().strftime("%m/%d"),
+            "date": datetime.datetime.now(tz).strftime("%Y/%m/%d %A"),
             "icon": daily["icon"],
             "summary": daily["summary"],
             "temperatureMax": daily["apparentTemperatureMax"],
