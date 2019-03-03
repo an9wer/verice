@@ -3,7 +3,7 @@
 
 usage() {
   cat <<EOF
-Usage: me-new-conf <conf_dir>
+Usage: me-conf-new <conf_dir>
 
 Arguments:
   conf_dir    Configuration directory
@@ -14,13 +14,13 @@ new_conf() {
   local conf sure
   local conf_temp=$(mktemp -p /tmp me-new-conf.XXXXXX)
   local editor=${EDITOR:-nano}
-  if ! me list-conf-dir | grep -E "^$1$" &>/dev/null; then
+  if ! me conf-dir-list | grep -E "^$1$" &>/dev/null; then
     echo "Configuration directory '$1' doesn't exist."
     exit 1
   fi
 
   read -p "Name of your configuration file: " conf
-  if me list-conf "$1" | grep -E "^$conf$" &>/dev/null; then
+  if me conf-list "$1" | grep -E "^$conf$" &>/dev/null; then
     echo "Configuration file '$conf' has been existed."
     exit 1
   fi

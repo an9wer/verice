@@ -3,7 +3,7 @@
 
 usage() {
   cat <<EOF
-Usage: me-list-conf <conf_dir>
+Usage: me-conf-list <conf_dir>
 
 Arguments:
   conf_dir    Configuration directory

@@ -3,7 +3,7 @@
 
 usage() {
   cat <<EOF
-Usage: me-delete-conf <conf_dir> <conf>
+Usage: me-conf-delete <conf_dir> <conf>
 
 Arguments:
   conf_dir    Configuration directory
@@ -13,7 +13,7 @@ EOF
 
 delete_conf() {
   local sure
-  if ! me list-conf-dir | grep -E "^$1$" &>/dev/null; then
+  if ! me conf-dir-list | grep -E "^$1$" &>/dev/null; then
     echo "Configuration directory '$1' doesn't exist."
     exit 1
   fi
