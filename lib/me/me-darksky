@@ -32,7 +32,8 @@ Options:
   -c <conf>                 Run from an existed configuration file""")
 
 def parse_conf():
-    global report
+    global report_today
+    global report_next_day
     exec(open(conf).read())
 
     if not(CONF_VAR.issubset(locals())):
@@ -42,29 +43,39 @@ def parse_conf():
         globals()[var] = locals()[var]
 
     if LANG == "en":
-        report = (
+        report_today = (
             "{date} ({icon}): {summary} "
             "Direction of wind is {windBearing}, speed of wind is {windSpeed}km/h."
-            "Minmum temperature is {temperatureMin}°C around at {temperatureMinTime}. "
-            "Maximum temperature is {temperatureMax}°C around at {temperatureMaxTime}, "
+            "Minmum temperature is {apparentTemperatureMin}°C around at {apparentTemperatureMinTime}. "
+            "Maximum temperature is {apparentTemperatureMax}°C around at {apparentTemperatureMaxTime}, "
             "Time of sunrise is {sunriseTime}, time of sunset is {sunsetTime}."
             "Moon phase (0-1) is {moonPhase}."
             "Humidity (0-1) is {humidity}."
             "Sky occluded by clouds (0-1) is {cloudCover}."
-            "Precipitation intensity is {precipIntensity}.")
+            "Precipitation intensity is {precipIntensity}.\n")
+        report_next_day = (
+            "{date} ({icon}): {summary} "
+            "Direction of wind is {windBearing}, speed of wind is {windSpeed}km/h."
+            "Temperature is about {apparentTemperatureMin}°C ~ {apparentTemperatureMax}°C.\n"
+        )
         try: locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
         except locale.Error: pass
     elif LANG == "zh":
-        report = (
+        report_today = (
             "{date} ({icon})： {summary}"
             "{windBearing}风{windSpeed}km/h。"
-            "{temperatureMinTime}点气温最低为{temperatureMin}°C。"
-            "{temperatureMaxTime}点气温最高为{temperatureMax}°C，"
+            "{apparentTemperatureMinTime}点气温最低为{apparentTemperatureMin}°C。"
+            "{apparentTemperatureMaxTime}点气温最高为{apparentTemperatureMax}°C，"
             "日出为{sunriseTime}，日落为{sunsetTime}。"
             "月相 (0-1) 为 {moonPhase}。"
             "湿度 (0-1) 为 {humidity}。"
             "云层 (0-1) 为 {cloudCover}。"
             "降水量密度为 {precipIntensity}mm/h。")
+        report_next_day = (
+            "{date} ({icon})： {summary}"
+            "{windBearing}风{windSpeed}km/h。"
+            "温度{apparentTemperatureMin}°C-{apparentTemperatureMax}°C。\n"
+        )
         try: locale.setlocale(locale.LC_ALL, "zh_CN.UTF-8")
         except locale.Error: pass
     else:
@@ -113,24 +124,37 @@ def parse_data():
 
     with urllib.request.urlopen(API_URL.format(**globals())) as resp:
         data = json.loads(resp.read())
-        daily = data["daily"]["data"][0]
-        print(report.format(**{
+        #import pprint; pprint.pprint(data)
+        today = data["daily"]["data"][0]
+        report = report_today.format(**{
             "date": datetime.datetime.now(tz).strftime("%Y/%m/%d %A"),
-            "icon": daily["icon"],
-            "summary": daily["summary"],
-            "temperatureMax": daily["apparentTemperatureMax"],
-            "temperatureMaxTime": ts2h(daily["apparentTemperatureMaxTime"]),
-            "temperatureMin": daily["apparentTemperatureMin"],
-            "temperatureMinTime": ts2h(daily["apparentTemperatureMinTime"]),
-            "sunsetTime": ts2hm(daily["sunsetTime"]),
-            "sunriseTime": ts2hm(daily["sunriseTime"]),
-            "windSpeed": daily["windSpeed"],
-            "windBearing": wind_direction(daily["windBearing"], lang=globals()["LANG"]),
-            "humidity": daily["humidity"],
-            "moonPhase": daily["moonPhase"],
-            "cloudCover": daily["cloudCover"],
-            "precipIntensity": daily["precipIntensity"],
-        }))
+            "icon": today["icon"],
+            "summary": today["summary"],
+            "apparentTemperatureMin": today["apparentTemperatureMin"],
+            "apparentTemperatureMinTime": ts2h(today["apparentTemperatureMinTime"]),
+            "apparentTemperatureMax": today["apparentTemperatureMax"],
+            "apparentTemperatureMaxTime": ts2h(today["apparentTemperatureMaxTime"]),
+            "sunsetTime": ts2hm(today["sunsetTime"]),
+            "sunriseTime": ts2hm(today["sunriseTime"]),
+            "windSpeed": today["windSpeed"],
+            "windBearing": wind_direction(today["windBearing"], lang=globals()["LANG"]),
+            "humidity": today["humidity"],
+            "moonPhase": today["moonPhase"],
+            "cloudCover": today["cloudCover"],
+            "precipIntensity": today["precipIntensity"],
+        })
+        for i, next_day in enumerate(data["daily"]["data"][1:], 1):
+            report += report_next_day.format(**{
+                "date": (datetime.datetime.now(tz)
+                            + datetime.timedelta(days=i)).strftime("%Y/%m/%d %A"),
+                "icon": next_day["icon"],
+                "summary": next_day["summary"],
+                "windSpeed": next_day["windSpeed"],
+                "windBearing": wind_direction(next_day["windBearing"], lang=globals()["LANG"]),
+                "apparentTemperatureMin": next_day["apparentTemperatureMin"],
+                "apparentTemperatureMax": next_day["apparentTemperatureMax"],
+            })
+        return report
 
 
 if __name__ == "__main__":
@@ -158,7 +182,7 @@ if __name__ == "__main__":
             die("Cannot find configuration file '%s'." % conf)
 
         parse_conf()
-        parse_data()
+        print(parse_data())
 
     else:
         usage()
