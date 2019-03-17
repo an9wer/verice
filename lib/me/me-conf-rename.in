@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Rename configuration file name
 
+ETC_DIR="M4_ETC_DIR"
+
 usage() {
   cat <<EOF
 Usage: me-conf-rename <conf_dir> <conf> [<name>]
@@ -32,8 +34,8 @@ rename_conf() {
   else
     name=$3
   fi
-  mv "/etc/me-$1.d/$2.conf" "/etc/me-$1.d/$name.conf"
-  echo "/etc/me-$1.d/$2.conf -> /etc/me-$1.d/$name.conf"
+  mv "${ETC_DIR}/me-$1.d/$2.conf" "${ETC_DIR}/me-$1.d/$name.conf"
+  echo "${ETC_DIR}/me-$1.d/$2.conf -> ${ETC_DIR}/me-$1.d/$name.conf"
 }
 
 # Main

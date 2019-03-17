@@ -3,7 +3,9 @@
 
 set -e
 
-source /etc/me-github.conf
+ETC_DIR="M4_ETC_DIR"
+
+source "$ETC_DIR/me-github.conf"
 LOG=/var/log/me-github.log
 
 usage() {
@@ -19,7 +21,7 @@ EOF
 
 log() {
   for conf in \
-      $(find /etc/me-github.d -name '*.conf' ! -name 'example.conf'); do
+      $(find "$ETC_DIR/me-github.d" -name '*.conf' ! -name 'example.conf'); do
 
     unset ORIGIN_URL UPSTREAM_URL REPO_NAME
     source "$conf"

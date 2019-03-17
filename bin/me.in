@@ -10,7 +10,7 @@ ME_ANSI_MAGENTA="\e[95m"
 ME_ANSI_CYAN="\e[96m"
 ME_ANSI_WHITE="\e[97m"
 
-lib_me_dir=LIB_ME_DIR
+lib_me_dir=M4_LIB_ME_DIR
 
 me_subcmds=(
   $(find $lib_me_dir -name 'me-*' -printf "%f\n" | cut -c 4-) )

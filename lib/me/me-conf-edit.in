@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Edit configuration file
 
+ETC_DIR="M4_ETC_DIR"
+
 usage() {
   cat <<EOF
 Usage: me-conf-edit <conf_dir> <conf>
@@ -25,15 +27,15 @@ update_conf() {
     exit 1
   fi
 
-  cp -f "/etc/me-$1.d/$2.conf" "$conf_temp"
+  cp -f "${ETC_DIR}/me-$1.d/$2.conf" "$conf_temp"
   "$editor" "$conf_temp"
 
   for ((;;)); do
     read -p "Do you want to save your modification? [y/n]: " sure
     if [[ $sure =~ [Yy] ]]; then
-      mv "$conf_temp" "/etc/me-$1.d/$2.conf"
-      chmod 644 "/etc/me-$1.d/$2.conf"
-      echo "Succeed to create file '/etc/me-$1.d/$2.conf'."
+      mv "$conf_temp" "${ETC_DIR}/me-$1.d/$2.conf"
+      chmod 644 "${ETC_DIR}/me-$1.d/$2.conf"
+      echo "Succeed to create file '${ETC_DIR}/me-$1.d/$2.conf'."
       break
     elif [[ $sure =~ [Nn] ]]; then
       echo "Ignore your modification."

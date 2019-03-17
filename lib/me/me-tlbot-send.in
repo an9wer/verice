@@ -6,7 +6,7 @@ import os.path
 import subprocess
 import telegram
 
-CONF_DIR = "/etc/me-tlbot-send.d"
+CONF_DIR = "M4_ETC_DIR/me-tlbot-send.d"
 CONF_VAR = {"TOKEN", "CHAT_ID"}
 
 

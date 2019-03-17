@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Delete configuration file
 
+ETC_DIR="M4_ETC_DIR"
+
 usage() {
   cat <<EOF
 Usage: me-conf-delete <conf_dir> <conf>
@@ -24,9 +26,9 @@ delete_conf() {
   fi
 
   for ((;;)); do
-    read -p "Do you really want to delete configuration file '/etc/me-$1.d/$2.conf'? [y/n]: " sure
+    read -p "Do you really want to delete configuration file '$ETC_DIR/me-$1.d/$2.conf'? [y/n]: " sure
     if [[ $sure =~ [Yy] ]]; then
-      rm -f "/etc/me-$1.d/$2.conf"
+      rm -f "$ETC_DIR/me-$1.d/$2.conf"
       echo "Done."
       break
     elif [[ $sure =~ [Nn] ]]; then

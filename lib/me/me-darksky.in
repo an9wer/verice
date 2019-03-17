@@ -9,7 +9,7 @@ import datetime
 import subprocess
 import urllib.request
 
-CONF_DIR = "/etc/me-darksky.d"
+CONF_DIR = "M4_ETC_DIR/me-darksky.d"
 CONF_VAR = {"KEY", "LANG", "LATITUDE", "LONGTITUDE", "UNITS"}
 API_URL = "https://api.darksky.net/forecast/{KEY}/{LATITUDE},{LONGTITUDE}?lang={LANG}&units={UNITS}"
 
@@ -108,7 +108,7 @@ def wind_direction(wind_bearing, lang="en"):
         if lang == "en": direction += "West"
         elif lang == "zh" : direction += "西"
 
-    if 0 < wind_bearing < 90 or 270 < wind_bearing < 360:
+    if 0 <= wind_bearing < 90 or 270 < wind_bearing <= 360:
         if lang == "en": direction = "North" + direction
         elif lang == "zh" : direction += "北"
     elif 90 < wind_bearing < 270:

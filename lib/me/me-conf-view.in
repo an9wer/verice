@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+ETC_DIR="M4_ETC_DIR"
+
 usage() {
   cat <<EOF
 Usage: me-conf-view <conf_dir> <conf>
@@ -21,7 +23,7 @@ view_conf() {
     exit 1
   fi
 
-  cat "/etc/me-$1.d/$2.conf"
+  cat "${ETC_DIR}/me-$1.d/$2.conf"
 }
 
 case $1 in

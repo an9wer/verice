@@ -3,7 +3,7 @@ _me_completion() {
   _get_comp_words_by_ref cur prev words cword
 
   ME_SUBCMDS=(
-    $(find LIB_ME_DIR -name 'me-*' -printf "%f\n" | cut -c 4-) )
+    $(find M4_LIB_ME_DIR -name 'me-*' -printf "%f\n" | cut -c 4-) )
 
   (( $cword == 1 )) && {
     COMPREPLY=( $(compgen -W "${ME_SUBCMDS[*]}" $cur) )
