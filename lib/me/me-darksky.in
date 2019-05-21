@@ -13,27 +13,25 @@ CONF_DIR = "M4_ETC_DIR/me-darksky.d"
 CONF_VAR = {"KEY", "LANG", "LATITUDE", "LONGTITUDE", "UNITS"}
 API_URL = "https://api.darksky.net/forecast/{KEY}/{LATITUDE},{LONGTITUDE}?lang={LANG}&units={UNITS}"
 
+
 def die(msg):
     print(msg)
     sys.exit(1)
 
-
 def usage():
         die(
-"""Usage: me-darksky [<options>]
+"""Usage: me-darksky -c <CONF> [-d <DAY>]
 
 Options:
-  -l, --list-conf           List all configuration files
-  -n, --new-conf            Create a new configuration file
-  -v, --view-conf <conf>    Display content of a specified configuration file
-  -e, --edit-conf <conf>    Edit an existed configuration file
-  -d, --delete-conf <conf>  Delete an existed configuration file
-  -r, --rename-conf <conf>  Rename an existed configuration file
-  -c <conf>                 Run from an existed configuration file""")
+  -d, --day  <DAY>          DAY can be 'today' or 'tomorrow', if this option is not set, all days will be used
+  -c, --conf <CONF>         Specify configuration file""")
+ 
 
 def parse_conf():
-    global report_today
-    global report_next_day
+    global report_today_prefix
+    global report_tomorrow_prefix
+    global report_template
+    global report_brief_template
     exec(open(conf).read())
 
     if not(CONF_VAR.issubset(locals())):
@@ -43,7 +41,9 @@ def parse_conf():
         globals()[var] = locals()[var]
 
     if LANG == "en":
-        report_today = (
+        report_today_prefix = "<Today> "
+        report_tomorrow_prefix = "<Tomorrow> "
+        report_template = (
             "{date} ({icon}): {summary} "
             "Direction of wind is {windBearing}, speed of wind is {windSpeed}km/h."
             "Minmum temperature is {apparentTemperatureMin}°C around at {apparentTemperatureMinTime}, "
@@ -53,7 +53,7 @@ def parse_conf():
             "Humidity (0-1) is {humidity}."
             "Sky occluded by clouds (0-1) is {cloudCover}."
             "Precipitation intensity is {precipIntensity}.\n")
-        report_next_day = (
+        report_brief_template = (
             "{date} ({icon}): {summary} "
             "Direction of wind is {windBearing}, speed of wind is {windSpeed}km/h."
             "Temperature is about {apparentTemperatureMin}°C-{apparentTemperatureMax}°C.\n"
@@ -61,7 +61,9 @@ def parse_conf():
         try: locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
         except locale.Error: pass
     elif LANG == "zh":
-        report_today = (
+        report_today_prefix = "<今日> "
+        report_tomorrow_prefix = "<明日> "
+        report_template = (
             "{date} ({icon})： {summary}"
             "{windBearing}风{windSpeed}km/h。"
             "{apparentTemperatureMinTime}点气温最低为{apparentTemperatureMin}°C，"
@@ -71,7 +73,7 @@ def parse_conf():
             "湿度 (0-1) 为 {humidity}。"
             "云层 (0-1) 为 {cloudCover}。"
             "降水量密度为 {precipIntensity}mm/h。\n")
-        report_next_day = (
+        report_brief_template = (
             "{date} ({icon})： {summary}"
             "{windBearing}风{windSpeed}km/h。"
             "温度{apparentTemperatureMin}°C-{apparentTemperatureMax}°C。\n"
@@ -117,65 +119,71 @@ def wind_direction(wind_bearing, lang="en"):
 
     return direction or wind_bearing
 
-def parse_data():
+def template_engine(template, data, day):
     tz = datetime.timezone(datetime.timedelta(hours=globals()["LONGTITUDE"] // 15))
     ts2h = lambda ts: datetime.datetime.fromtimestamp(ts, tz=tz).strftime("%H")
     ts2hm = lambda ts: datetime.datetime.fromtimestamp(ts, tz=tz).strftime("%H:%M")
+    return template.format(**{
+        "date": (datetime.datetime.now(tz)
+                    + datetime.timedelta(days=day)).strftime("%Y/%m/%d %A"),
+        "icon": data["icon"],
+        "summary": data["summary"],
+        "windSpeed": data["windSpeed"],
+        "windBearing": wind_direction(data["windBearing"], lang=globals()["LANG"]),
+        "apparentTemperatureMin": data["apparentTemperatureMin"],
+        "apparentTemperatureMax": data["apparentTemperatureMax"],
+        "apparentTemperatureMinTime": ts2h(data["apparentTemperatureMinTime"]),
+        "apparentTemperatureMaxTime": ts2h(data["apparentTemperatureMaxTime"]),
+        "sunsetTime": ts2hm(data["sunsetTime"]),
+        "sunriseTime": ts2hm(data["sunriseTime"]),
+        "windSpeed": data["windSpeed"],
+        "windBearing": wind_direction(data["windBearing"], lang=globals()["LANG"]),
+        "humidity": data["humidity"],
+        "moonPhase": data["moonPhase"],
+        "cloudCover": data["cloudCover"],
+        "precipIntensity": data["precipIntensity"],
+    })
 
-    report = ""
+def generate_report(day="all"):
     with urllib.request.urlopen(API_URL.format(**globals())) as resp:
         data = json.loads(resp.read())
-        for i, day in enumerate(data["daily"]["data"][0:]):
-            report += (report_today if i == 0 else report_next_day).format(**{
-                "date": (datetime.datetime.now(tz)
-                            + datetime.timedelta(days=i)).strftime("%Y/%m/%d %A"),
-                "icon": day["icon"],
-                "summary": day["summary"],
-                "windSpeed": day["windSpeed"],
-                "windBearing": wind_direction(day["windBearing"], lang=globals()["LANG"]),
-                "apparentTemperatureMin": day["apparentTemperatureMin"],
-                "apparentTemperatureMax": day["apparentTemperatureMax"],
-                "apparentTemperatureMinTime": ts2h(day["apparentTemperatureMinTime"]),
-                "apparentTemperatureMaxTime": ts2h(day["apparentTemperatureMaxTime"]),
-                "sunsetTime": ts2hm(day["sunsetTime"]),
-                "sunriseTime": ts2hm(day["sunriseTime"]),
-                "windSpeed": day["windSpeed"],
-                "windBearing": wind_direction(day["windBearing"], lang=globals()["LANG"]),
-                "humidity": day["humidity"],
-                "moonPhase": day["moonPhase"],
-                "cloudCover": day["cloudCover"],
-                "precipIntensity": day["precipIntensity"],
-            })
+        if day == "today":
+            report = report_today_prefix
+            report += template_engine(report_template, data["daily"]["data"][0], 0)
+        elif day == "tomorrow":
+            report = report_tomorrow_prefix
+            report += template_engine(report_template, data["daily"]["data"][1], 1)
+        elif day == "all":
+            report = ""
+            for i, d in enumerate(data["daily"]["data"][0:]):
+                report += template_engine(report_template if i == 0 else report_brief_template, d, i)
     return report
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2 and sys.argv[1] in ["-l", "--list-conf"]:
-        subprocess.run(["me", "conf-list", "darksky"])
+    def safe_pop(l, i):
+        try: return l.pop(i)
+        except IndexError: usage()
 
-    elif len(sys.argv) == 2 and sys.argv[1] in ["-n", "--new-conf"]:
-        subprocess.run(["me", "conf-new", "darksky"])
+    # Init value
+    conf, day = "", "all"
+    # Parse arguments
+    while sys.argv[1:]:
+        arg = sys.argv.pop(1)
+        if arg in ["-c", "--conf"]:
+            conf = os.path.join(CONF_DIR, safe_pop(sys.argv, 1) + ".conf")
+        elif arg in ["-d", "--day"]:
+            day = safe_pop(sys.argv, 1)
+        else:
+            usage()
 
-    elif len(sys.argv) == 3 and sys.argv[1] in ["-v", "--view-conf"]:
-        subprocess.run(["me", "conf-view", "darksky", sys.argv[2]])
-
-    elif len(sys.argv) == 3 and sys.argv[1] in ["-e", "--edit-conf"]:
-        subprocess.run(["me", "conf-edit", "darksky", sys.argv[2]])
-
-    elif len(sys.argv) == 3 and sys.argv[1] in ["-d", "--delete-conf"]:
-        subprocess.run(["me", "conf-delete", "darksky", sys.argv[2]])
-
-    elif len(sys.argv) == 3 and sys.argv[1] in ["-r", "--rename-conf"]:
-        subprocess.run(["me", "conf-rename", "darksky", sys.argv[2]])
-
-    elif len(sys.argv) == 3 and sys.argv[1] in ["-c"]:
-        conf = os.path.join(CONF_DIR, sys.argv[2] + ".conf")
-        if not os.path.isfile(conf):
-            die("Cannot find configuration file '%s'." % conf)
-
-        parse_conf()
-        print(parse_data())
-
-    else:
+    if conf == "":
         usage()
+    if not os.path.isfile(conf):
+        die("Cannot find configuration file '%s'." % conf)
+    if day not in ["today", "tomorrow", "all"]:
+        die("Unknown value of argument day '%s', only support 'today' and 'tomorrow'." % day)
+
+    parse_conf()
+    print(generate_report(day))
 
