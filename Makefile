@@ -11,7 +11,7 @@ ME_TLBOT_DIR = /etc/me-tlbot-send.d
 IN_FILE = bin/me completions/me lib/me/me-conf-delete lib/me/me-conf-list \
 	lib/me/me-conf-dir-list lib/me/me-conf-edit lib/me/me-conf-new \
 	lib/me/me-conf-rename lib/me/me-conf-view lib/me/me-darksky \
-	lib/me/me-tlbot-send lib/me/me-github
+	lib/me/me-tlbot-send lib/me/me-matrix-send lib/me/me-github
 
 M4 := m4 -P
 RM := rm
