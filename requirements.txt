@@ -1,3 +1,2 @@
-python-telegram-bot
-matrix_client
-
+python-telegram-bot==11.1.0
+matrix_client==0.3.2

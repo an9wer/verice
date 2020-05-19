@@ -2,16 +2,15 @@ prefix ?= /usr/local
 BIN_DIR = $(prefix)/bin
 ETC_DIR = $(prefix)/etc
 LIB_ME_DIR = $(prefix)/lib/me
+INCLUDE_ME_DIR = $(prefix)/include/me
 COMPLETOINS_DIR = $(prefix)/share/bash-completion/completions
 PROFILE_DIR = /etc/profile.d
-ME_GITHUB_DIR = /etc/me-github.d
-ME_DARKSKY_DIR = /etc/me-darksky.d
-ME_TLBOT_DIR = /etc/me-tlbot-send.d
 
 IN_FILE = bin/me completions/me lib/me/me-conf-delete lib/me/me-conf-list \
 	lib/me/me-conf-dir-list lib/me/me-conf-edit lib/me/me-conf-new \
 	lib/me/me-conf-rename lib/me/me-conf-view lib/me/me-darksky \
-	lib/me/me-tlbot-send lib/me/me-matrix-send lib/me/me-github
+	lib/me/me-tlbot-send lib/me/me-matrix-send lib/me/me-github \
+	lib/me/me-network
 
 M4 := m4 -P
 RM := rm
@@ -62,6 +61,13 @@ define install_etc
 	done
 endef
 
+define install_include
+	IFS=$$'\n'; \
+	for f in $$(ls -1 include/me); do \
+		$(INSTALL) -m 644 -D "include/me/$$f" "$(INCLUDE_ME_DIR)"; \
+	done
+endef
+
 define install_completions
 	$(INSTALL) -m 644 -D completions/me $(COMPLETOINS_DIR)
 endef
@@ -72,15 +78,15 @@ build: $(IN_FILE)
 	$(setup_python)
 
 bin/me: bin/me.in
-	$(M4) -D M4_LIB_ME_DIR=$(LIB_ME_DIR) $< >$@
+	$(M4) -D M4_LIB_ME_DIR=$(LIB_ME_DIR) -D M4_INCLUDE_ME_DIR=$(INCLUDE_ME_DIR) $< >$@
 	$(CHMOD) 755 $@
 	
 lib/me/%: lib/me/%.in
-	$(M4) -D M4_ETC_DIR=$(ETC_DIR) $< >$@
+	$(M4) -D M4_ETC_DIR=$(ETC_DIR) -D M4_INCLUDE_ME_DIR=$(INCLUDE_ME_DIR) $< >$@
 	$(CHMOD) 755 $@
 
 completions/me: completions/me.in
-	$(M4) -D M4_LIB_ME_DIR=$(LIB_ME_DIR) $< >$@
+	$(M4) -D M4_LIB_ME_DIR=$(LIB_ME_DIR) -D M4_INCLUDE_ME_DIR=$(INCLUDE_ME_DIR) $< >$@
 
 update: clean uninstall
 	$(GIT) pull origin
@@ -88,14 +94,18 @@ update: clean uninstall
 clean:
 	$(RM) -f $(IN_FILE)
 
-install: $(LIB_ME_DIR)
+install: $(LIB_ME_DIR) $(INCLUDE_ME_DIR)
 	$(install_bin)
 	$(install_lib)
 	$(install_etc)
+	$(install_include)
 	$(install_completions)
 
 $(LIB_ME_DIR):
 	mkdir -p $(LIB_ME_DIR)
+
+$(INCLUDE_ME_DIR):
+	mkdir -p $(INCLUDE_ME_DIR)
 
 uninstall:
 	$(RM) -f $(BIN_DIR)/me
