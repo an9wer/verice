@@ -1,0 +1,133 @@
+#!/usr/bin/env perl
+ 
+use strict;
+use warnings;
+
+use LWP;
+use File::Basename;
+
+chdir(dirname(__FILE__));
+#my $CONFDIR = dirname(__FILE__) . "/conf";
+
+sub run_cmd(@) {
+    system(@_) == 0
+        or die "Run cmd '@_' failed: $?";
+}
+
+sub usage {
+    my @softwares;
+    opendir(my $DH, "conf")
+        or die("Failed to open directory 'conf'");
+    while (defined(my $conf = readdir($DH))) {
+        if ($conf =~ s@\.conf$@@) {
+            push(@softwares, $conf);
+        }
+    }
+    closedir($DH)
+        or warn("Failed to close directory 'conf'");
+
+    print "Usage: check_version [-h|--help] [-p|--push] <SOFTWARE>\n";
+    print "\n";
+    print "Arguments:\n";
+    print "  -h, --help  display this page\n";
+    print "  -p, --push  use git push if new version found\n";
+    print "  <SOFTWARE>  " . join(", ", @softwares) . "\n";
+
+    exit 0;
+}
+
+sub load_conf {
+    my $conf = $_[0];
+
+    # Thx: https://stackoverflow.com/a/953744
+    local $/;
+    open(my $FH, '<', $conf)
+        or die("Failed to open file '$conf'");
+    my $conf_content = <$FH>;
+    close($FH)
+        or warn("Faild to close file '$conf'");
+
+    # Thx: https://stackoverflow.com/a/3653232
+    my ($site) = $conf_content =~ m@site=(.+)@
+        or die("No value of site in '$conf'");
+    my ($type) = $conf_content =~ m@type=(.+)@
+        or die("No value of type in '$conf'");
+    my ($init) = $conf_content =~ m@init=(.+)@
+        or die("No value of init in '$conf'");
+    my ($last) = $conf_content =~ m@last=(.*)@;
+
+    return ($conf_content, $site, $type, $init, $last);
+}
+
+sub request {
+    my $site = $_[0];
+
+    my $response = LWP::UserAgent->new()->get($site);
+    $response->is_success
+        or die("Response of '$site' is '$response->status_line'.");
+    return $response->decoded_content;
+}
+
+sub parse_suckless {
+    my $resp_content = $_[0];
+
+    foreach (split("\n", $resp_content)) {
+        if (m@<tr><td>(\d{4}-\d{2}-\d{2} \d{2}:\d{2})</td><td><a href="commit/(\w{40})\.html">(.+?)</a></td><td>(.+?)</td>@) {
+            my ($date, $commit, $comment, $author) = ($1, $2, $3, $4);
+            return ($commit, sprintf("author (%s); date (%s); commit (%s); comment (%s);", $author, $date, $commit, $comment));
+        }
+    }
+}
+
+
+# Main
+my ($software, $push);
+
+# Parse arguments
+while ($ARGV = shift) {
+    if ($ARGV =~ m@^-h$|^--help$@) {
+        usage;
+    } elsif ($ARGV =~ m@^-p$|^--push$@) {
+        $push = 1;
+    } else {
+        if (defined $software) {
+            die("Only single <SOFTWARE> is accepted.");
+        }
+        $software = $ARGV;
+    }
+}
+
+my $conf = 'conf/' . $software . ".conf";
+
+my ($conf_content, $site, $type, $init, $last) = load_conf($conf);
+my $resp_content = request($site);
+
+my ($curr, $mesg);
+if ($type eq "suckless") {
+    ($curr, $mesg) = parse_suckless($resp_content);
+}
+
+if ($curr ne $last or $curr eq $init) {
+    # Update content of conf file
+    $conf_content =~ s@last=$last@last=$curr@;
+    open(my $FH, '>', $conf)
+        or die("Failed to open file '$conf'");
+    print $FH $conf_content;
+    close($FH)
+        or warn("Faild to close file '$conf'");
+
+    printf("name: %s\n", $software);
+    printf("site: %s\n", $site);
+    printf("init: %s\n", $init);
+    printf("last: %s\n", $last);
+    printf("curr: %s\n", $curr);
+    printf("mesg: %s\n", $mesg);
+
+    if ($push) {
+        print("\n");
+        run_cmd("git", "checkout", "-b", "$software-$curr");
+        run_cmd("git", "commit", "-m", "$software-$curr", "--", $conf);
+        run_cmd("git", "push", "origin", "$software-$curr");
+        run_cmd("git", "checkout", "master");
+    }
+}
