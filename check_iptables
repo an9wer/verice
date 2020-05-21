@@ -1,0 +1,40 @@
+#!/usr/bin/env -S bash -e
+
+die() {
+  echo "${@:2}"
+  exit $1;
+}
+
+usage() {
+  echo "Usage: check_iptables [-R|--restart] [<TABLE> ...]"
+  echo ""
+  echo "Options"
+  echo "  -R, --restart  Restart iptables.service after check"
+  echo "  <TABLE>        filter (default), nat, mangle or raw"
+  exit 0
+}
+
+tables=()
+while (( ${#@} > 0 )) ; do
+  case $1 in
+    -h|--help    ) usage ;;
+    -R|--restart ) restart=true ;;
+    *            ) tables+=($1) ;;
+  esac
+  shift
+done
+
+iptables_args=""
+for table in "${tables[@]}"; do
+  if [[ ! table =~ ^filter$|^nat$|^mangle$|^raw$ ]]; then
+    die 1 "Unsupport table '$table'"
+  fi
+  iptables_args+=" -t $table "
+done
+
+iptables $iptables_args -vnL
+if [[ restart == true ]]; then
+  systemctl restart iptables.service
+fi
+
+# vim: set filetype=sh :
