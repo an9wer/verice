@@ -1,4 +1,4 @@
-#!/usr/bin/env -S bash -e
+#!/usr/bin/bash -e
 
 die() {
   echo "${@:2}"
@@ -33,7 +33,7 @@ for table in "${tables[@]}"; do
 done
 
 iptables $iptables_args -vnL
-if [[ restart == true ]]; then
+if [[ $restart == true ]]; then
   systemctl restart iptables.service
 fi
 
