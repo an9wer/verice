@@ -2,7 +2,7 @@
 
 die() {
   echo "${@:2}"
-  exit $1;
+  exit $1
 }
 
 usage() {
@@ -36,5 +36,3 @@ iptables $iptables_args -vnL
 if [[ $restart == true ]]; then
   systemctl restart iptables.service
 fi
-
-# vim: set filetype=sh :
