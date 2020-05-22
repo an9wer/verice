@@ -22,17 +22,9 @@ while (( ${#@} > 0 )) ; do
     -h|--help    ) usage ;;
     -H|--html    ) html=true ;;
     -R|--restart ) restart=true ;;
-    *            ) tables+=($1) ;;
+    *            ) if [[ $1 =~ ^filter$|^nat$|^mangle$|^raw$ ]]; then tables+=($1); else die 1 "Unsupport table '$table'"; fi ;;
   esac
   shift
-done
-
-iptables_args=""
-for table in "${tables[@]}"; do
-  if [[ ! $table =~ ^filter$|^nat$|^mangle$|^raw$ ]]; then
-    die 1 "Unsupport table '$table'"
-  fi
-  iptables_args+=" -t $table "
 done
 
 if [[ $html == true ]]; then
@@ -44,7 +36,11 @@ else
 fi
 
 cmd() {
-  iptables $iptables_args -vnL
+  for table in "${tables[@]}"; do
+    echo "$table:"
+    iptables -t $table -vnL
+    echo -e "\n"
+  done
   if [[ $restart == true ]]; then
     systemctl restart iptables.service
   fi
