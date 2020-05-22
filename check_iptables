@@ -6,9 +6,11 @@ die() {
 }
 
 usage() {
-  echo "Usage: check_iptables [-R|--restart] [<TABLE> ...]"
+  echo "Usage: check_iptables [-h|--help] [-H|--html] [-R|--restart] [<TABLE> ...]"
   echo ""
-  echo "Options"
+  echo "Arguments"
+  echo "  -h, --help     Display this help page"
+  echo "  -H, --html     Display the result in html"
   echo "  -R, --restart  Restart iptables.service after check"
   echo "  <TABLE>        filter (default), nat, mangle or raw"
   exit 0
@@ -18,6 +20,7 @@ tables=()
 while (( ${#@} > 0 )) ; do
   case $1 in
     -h|--help    ) usage ;;
+    -H|--html    ) html=true ;;
     -R|--restart ) restart=true ;;
     *            ) tables+=($1) ;;
   esac
@@ -26,13 +29,24 @@ done
 
 iptables_args=""
 for table in "${tables[@]}"; do
-  if [[ ! table =~ ^filter$|^nat$|^mangle$|^raw$ ]]; then
+  if [[ ! $table =~ ^filter$|^nat$|^mangle$|^raw$ ]]; then
     die 1 "Unsupport table '$table'"
   fi
   iptables_args+=" -t $table "
 done
 
-iptables $iptables_args -vnL
-if [[ $restart == true ]]; then
-  systemctl restart iptables.service
+if [[ $html == true ]]; then
+  prefix="<pre>"
+  suffix="</pre>"
+else
+  prefix=
+  suffix=
 fi
+
+cmd() {
+  iptables $iptables_args -vnL
+  if [[ $restart == true ]]; then
+    systemctl restart iptables.service
+  fi
+}
+echo "$prefix$(cmd)$suffix"
