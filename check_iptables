@@ -6,7 +6,7 @@ die() {
 }
 
 usage() {
-  echo "Usage: check_iptables [-h|--help] [-H|--html] [-R|--restart] [<TABLE> ...]"
+  echo "Usage: check_iptables [-h|--help] [-H|--html] [-R|--restart] <TABLE> [<TABLE> ...]"
   echo ""
   echo "Arguments"
   echo "  -h, --help     Display this help page"
@@ -26,6 +26,10 @@ while (( ${#@} > 0 )) ; do
   esac
   shift
 done
+
+if (( ${#tables} == 0 )); then
+  usage
+fi
 
 if [[ $html == true ]]; then
   prefix="<pre>"
