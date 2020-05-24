@@ -81,7 +81,7 @@ sub parse_suckless {
 
 
 # Main
-my ($software, $push);
+my ($software, $push, $html);
 
 # Parse arguments
 while (my $arg = shift) {
