@@ -99,6 +99,10 @@ while (my $arg = shift) {
     }
 }
 
+if (! defined $software) {
+    usage;
+}
+
 my $conf = 'conf/' . $software . ".conf";
 
 my ($conf_content, $site, $type, $init, $last) = load_conf($conf);
