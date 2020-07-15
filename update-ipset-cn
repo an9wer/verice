@@ -40,11 +40,17 @@ if [[ $html == true ]]; then
   echo "<pre>"
 fi
 
-ipset create "$setname" hash:net &> /dev/null || echo "'$setname' already exists."
-ipset create "$setname-swap" hash:net &> /dev/null || die 1 "'$setname-swap' already exists."
-ipset flush  "$setname-swap"
+ipset create "$setname" hash:net &> /dev/null ||
+  echo "Create '$setname', but it already exists."
+ipset create "$setname-swap" hash:net &> /dev/null ||
+  die 1 "Create '$setname-swap', but it already exists."
 
 if [[ $new == true ]]; then
+  dir=$(dirname "$file")
+  if [[ ! -d $dir ]]; then
+    ipset destroy "$setname-swap"
+    die 1 "Cannot find '$dir'."
+  fi
   temp=$(mktemp /tmp/ipset-cn.XXXXX)
 
   curl $proxy --no-progress-meter -o "$temp" \
@@ -60,6 +66,7 @@ if [[ $new == true ]]; then
   mv "$temp" "$file"
 else
   if [[ ! -r $file ]]; then
+    ipset destroy "$setname-swap"
     die 1 "Cannot read '$file'."
   fi
 
@@ -71,8 +78,10 @@ else
   done < "$file"
 fi
 
-ipset swap "$setname-swap" "$setname" && echo "Swap '$setname-swap' and '$setname'."
-ipset destroy "$setname-swap" && echo "Destroy '$setname-swap'."
+ipset swap "$setname-swap" "$setname" &&
+  echo "Swap '$setname-swap' and '$setname'."
+ipset destroy "$setname-swap" &&
+  echo "Destroy '$setname-swap'."
 
 if [[ $html == true ]]; then
   echo "</pre>"
