@@ -1,0 +1,77 @@
+#!/usr/bin/bash
+
+die() {
+  echo "${@:2}"
+  exit $1
+}
+
+usage() {
+  echo "Usage: update-dnscrypt-proxy-sources [-h|--help] [-H|--html] [-x|--proxy <PROXY>] <SAVEDIR>"
+  echo ""
+  echo "Arguments"
+  echo "  -h, --help       Display this help page"
+  echo "  -H, --html       Display the result in html"
+  echo "  -x, --proxy      Use proxy when downloading new list"
+  echo "  <SAVEDIR>        Directory to save cache files of sources"
+  exit 0
+}
+
+while (( ${#@} > 0 )) ; do
+  case $1 in
+    -h|--help    ) usage ;;
+    -n|--new     ) new=true ;;
+    -H|--html    ) html=true ;;
+    -x|--proxy   ) shift; proxy="-x $1" ;;
+    *            ) if [[ ! -v savedir ]]; then savedir=$1; else die 1 "Support only one <SAVEDIR>."; fi ;;
+  esac
+  shift
+done
+
+if [[ ! -v savedir ]]; then
+  die 1 "No <SAVEDIR> provided."
+fi
+
+if [[ ! -d $savedir ]]; then
+  die 1 "Unfound '$savedir'."
+fi
+
+v=v2
+delimited_version=(2 0 42)
+current_version=($(dnscrypt-proxy -version | perl -pe "s/(\d+)\.(\d+)\.(\d+).*/\1 \2 \3/"))
+for (( i=0; i<${#delimited_version[@]}; i++ )); do
+  if (( ${current_version[i]} > ${delimited_version[i]} )); then
+    v=v3
+    break
+  fi
+done
+
+if [[ $html == true ]]; then
+  echo "<pre>"
+fi
+
+echo "Use $v urls."
+
+curl $proxy --no-progress-meter -o "$savedir"/public-resolvers.md \
+  "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/$v/public-resolvers.md" &&
+  echo "Succeed to download 'public-resolvers.md' to '$savedir'." ||
+  echo "Failed to download 'public-resolvers.md' to '$savedir'."
+
+curl $proxy --no-progress-meter -o "$savedir"/public-resolvers.md.minisig \
+  "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/$v/public-resolvers.md.minisig" &&
+  echo "Succeed to download 'public-resolvers.md.minisig' to '$savedir'." ||
+  echo "Failed to download 'public-resolvers.md.minisig' to '$savedir'."
+
+curl $proxy --no-progress-meter -o "$savedir"/relays.md \
+  "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/$v/relays.md" &&
+  echo "Succeed to download 'relays.md' to '$savedir'." ||
+  echo "Failed to download 'relays.md' to '$savedir'."
+
+curl $proxy --no-progress-meter -o "$savedir"/relays.md.minisig \
+  "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/$v/relays.md.minisig" &&
+  echo "Succeed to download 'relays.md.minisig' to '$savedir'." ||
+  echo "Failed to download 'relays.md.minisig' to '$savedir'."
+
+if [[ $html == true ]]; then
+  echo "</pre>"
+fi
+
