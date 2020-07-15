@@ -1,0 +1,79 @@
+#!/usr/bin/bash
+
+die() {
+  echo "${@:2}"
+  exit $1
+}
+
+usage() {
+  echo "Usage: update-ipset [-h|--help] [-H|--html] [-n|--new] [-x|--proxy <PROXY>] -f|--file <FILE> <SETNAME>"
+  echo ""
+  echo "Arguments"
+  echo "  -h, --help     Display this help page"
+  echo "  -H, --html     Display the result in html"
+  echo "  -n, --new      Update by downloading new list"
+  echo "  -f, --file     Use an existed list file. When used with '-n' option, it will save download to this file"
+  echo "  -x, --proxy    Use proxy when downloading new list"
+  echo "  <SETNAME>      Setname used by ipset"
+  exit 0
+}
+
+while (( ${#@} > 0 )) ; do
+  case $1 in
+    -h|--help  ) usage ;;
+    -n|--new   ) new=true ;;
+    -H|--html  ) html=true ;;
+    -f|--file  ) shift; file=$1 ;;
+    -x|--proxy ) shift; proxy="-x $1" ;;
+    *          ) if [[ ! -v setname ]]; then setname=$1; else die 1 "Support only one <SETNAME>"; fi ;;
+  esac
+  shift
+done
+if [[ ! -v setname ]]; then
+  die 1 "No <SETNAME> provided."
+fi
+if [[ ! -v file ]]; then
+  die 1 "No <FILE> provided."
+fi
+
+if [[ $html == true ]]; then
+  echo "<pre>"
+fi
+
+ipset create "$setname" hash:net &> /dev/null || echo "'$setname' already exists."
+ipset create "$setname-swap" hash:net &> /dev/null || die 1 "'$setname-swap' already exists."
+ipset flush  "$setname-swap"
+
+if [[ $new == true ]]; then
+  temp=$(mktemp /tmp/ipset-cn.XXXXX)
+
+  curl $proxy --no-progress-meter -o "$temp" \
+    'https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt'
+
+  while read block; do
+    ipset add "$setname-swap" "$block" || {
+      ipset destroy "$setname-swap"
+      exit 1
+    }
+  done < "$temp"
+
+  mv "$temp" "$file"
+else
+  if [[ ! -r $file ]]; then
+    die 1 "Cannot read '$file'."
+  fi
+
+  while read block; do
+    ipset add "$setname-swap" "$block" || {
+      ipset destroy "$setname-swap"
+      exit 1
+    }
+  done < "$file"
+fi
+
+ipset swap "$setname-swap" "$setname" && echo "Swap '$setname-swap' and '$setname'."
+ipset destroy "$setname-swap" && echo "Destroy '$setname-swap'."
+
+if [[ $html == true ]]; then
+  echo "</pre>"
+fi
