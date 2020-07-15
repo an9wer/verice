@@ -6,14 +6,14 @@ die() {
 }
 
 usage() {
-  echo "Usage: update-ipset [-h|--help] [-H|--html] [-n|--new] [-x|--proxy <PROXY>] -f|--file <FILE> <SETNAME>"
+  echo "Usage: update-ipset-cn [-h|--help] [-H|--html] [-n|--new] [-x|--proxy <PROXY>] -f|--file <FILE> <SETNAME>"
   echo ""
   echo "Arguments"
   echo "  -h, --help     Display this help page"
   echo "  -H, --html     Display the result in html"
   echo "  -n, --new      Update by downloading new list"
-  echo "  -f, --file     Use an existed list file. When used with '-n' option, it will save download to this file"
   echo "  -x, --proxy    Use proxy when downloading new list"
+  echo "  -f, --file     Use an existed list file. When used with '-n' option, it will save download to this file"
   echo "  <SETNAME>      Setname used by ipset"
   exit 0
 }
@@ -25,7 +25,7 @@ while (( ${#@} > 0 )) ; do
     -H|--html  ) html=true ;;
     -f|--file  ) shift; file=$1 ;;
     -x|--proxy ) shift; proxy="-x $1" ;;
-    *          ) if [[ ! -v setname ]]; then setname=$1; else die 1 "Support only one <SETNAME>"; fi ;;
+    *          ) if [[ ! -v setname ]]; then setname=$1; else die 1 "Support only one <SETNAME>."; fi ;;
   esac
   shift
 done
