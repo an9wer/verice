@@ -51,27 +51,22 @@ fi
 
 echo "Use $v urls."
 
-curl $proxy --no-progress-meter -o "$savedir"/public-resolvers.md \
-  "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/$v/public-resolvers.md" &&
-  echo "Succeed to download 'public-resolvers.md' to '$savedir'." ||
-  echo "Failed to download 'public-resolvers.md' to '$savedir'."
+tempdir=$(mktemp -d /tmp/dnscrypt-proxy-sources.XXXXX)
 
-curl $proxy --no-progress-meter -o "$savedir"/public-resolvers.md.minisig \
-  "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/$v/public-resolvers.md.minisig" &&
-  echo "Succeed to download 'public-resolvers.md.minisig' to '$savedir'." ||
-  echo "Failed to download 'public-resolvers.md.minisig' to '$savedir'."
+for source in public-resolvers.md public-resolvers.md.minisig relays.md relays.md.minisig; do
+  if curl $proxy -S -k -o "$tempdir/$source" \
+      "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/$v/$source"; then
+    mv "$tempdir/$source" "$savedir"
+    echo "Succeed to download '$source' to '$savedir'." 
+  else
+    echo "Failed to download '$source' to '$savedir':"
+    cat  "$tempdir/$source"
+    echo ""
+  fi
+done
 
-curl $proxy --no-progress-meter -o "$savedir"/relays.md \
-  "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/$v/relays.md" &&
-  echo "Succeed to download 'relays.md' to '$savedir'." ||
-  echo "Failed to download 'relays.md' to '$savedir'."
-
-curl $proxy --no-progress-meter -o "$savedir"/relays.md.minisig \
-  "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/$v/relays.md.minisig" &&
-  echo "Succeed to download 'relays.md.minisig' to '$savedir'." ||
-  echo "Failed to download 'relays.md.minisig' to '$savedir'."
+rm -rf "$tempdir"
 
 if [[ $html == true ]]; then
   echo "</pre>"
 fi
-
