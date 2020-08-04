@@ -1,4 +1,4 @@
-#!/usr/bin/bash -e
+#!/usr/bin/bash
 
 die() {
   echo "${@:2}"
@@ -6,12 +6,12 @@ die() {
 }
 
 usage() {
-  echo "Usage: check_iptables [-h|--help] [-H|--html] [-R|--restart] <TABLE> [<TABLE> ...]"
+  echo "Usage: check_iptables [-h|--help] [-H|--html] [-Z|--zero] <TABLE> [<TABLE> ...]"
   echo ""
   echo "Arguments"
   echo "  -h, --help     Display this help page"
   echo "  -H, --html     Display the result in html"
-  echo "  -R, --restart  Restart iptables.service after check"
+  echo "  -Z, --zero     Zero the packet and byte counters after check"
   echo "  <TABLE>        filter (default), nat, mangle or raw"
   exit 0
 }
@@ -19,10 +19,10 @@ usage() {
 tables=()
 while (( ${#@} > 0 )) ; do
   case $1 in
-    -h|--help    ) usage ;;
-    -H|--html    ) html=true ;;
-    -R|--restart ) restart=true ;;
-    *            ) if [[ $1 =~ ^filter$|^nat$|^mangle$|^raw$ ]]; then tables+=($1); else die 1 "Unsupport table '$table'"; fi ;;
+    -h|--help ) usage ;;
+    -H|--html ) html=true ;;
+    -Z|--zero ) zero=true ;;
+    *         ) if [[ $1 =~ ^filter$|^nat$|^mangle$|^raw$ ]]; then tables+=($1); else die 1 "Unsupport table '$table'"; fi ;;
   esac
   shift
 done
@@ -42,11 +42,11 @@ fi
 cmd() {
   for table in "${tables[@]}"; do
     echo "$table:"
-    iptables -t $table -vnL
+    iptables -t "$table" -vnL
     echo -e "\n"
+    if [[ $zero == true ]]; then
+      iptables -t "$table" -Z
+    fi
   done
-  if [[ $restart == true ]]; then
-    systemctl restart iptables.service
-  fi
 }
 echo "$prefix$(cmd)$suffix"
