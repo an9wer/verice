@@ -70,7 +70,17 @@ while read block; do
   }
 done < "${temp:-$file}"
 
-ipset list "$setname-swap" | perl -F: -lane 'if (@F[0] =~ /Number of entries/ && @F[1] > 0) { exit 123; }'
+ipset list "$setname-swap" | perl -F: -lane '
+BEGIN {
+  my $es = 0;
+}
+if (@F[0] =~ /Number of entries/ && @F[1] > 0) {
+  $es = 123;
+}
+END {
+  exit $es;
+}
+'
 if (( $? == 123 )); then
   ipset swap "$setname-swap" "$setname" && {
     echo "Swap '$setname-swap' and '$setname'."
