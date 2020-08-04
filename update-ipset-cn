@@ -55,33 +55,29 @@ if [[ $new == true ]]; then
 
   curl $proxy -S -k -o "$temp" \
     'https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt'
-
-  while read block; do
-    ipset add "$setname-swap" "$block" || {
-      ipset destroy "$setname-swap"
-      exit 1
-    }
-  done < "$temp"
-
-  mv "$temp" "$file"
 else
   if [[ ! -r $file ]]; then
     ipset destroy "$setname-swap"
     die 1 "Cannot read '$file'."
   fi
 
-  while read block; do
-    ipset add "$setname-swap" "$block" || {
-      ipset destroy "$setname-swap"
-      exit 1
-    }
-  done < "$file"
 fi
+
+while read block; do
+  ipset add "$setname-swap" "$block" || {
+    ipset destroy "$setname-swap"
+    exit 1
+  }
+done < "${temp:-$file}"
 
 ipset list "$setname-swap" | perl -F: -lane 'if (@F[0] =~ /Number of entries/ && @F[1] > 0) { exit 123; }'
 if (( $? == 123 )); then
-  ipset swap "$setname-swap" "$setname" &&
+  ipset swap "$setname-swap" "$setname" && {
     echo "Swap '$setname-swap' and '$setname'."
+    if [[ $new == true ]]; then
+      mv "$temp" "$file"
+    fi
+  }
   ipset destroy "$setname-swap" &&
     echo "Destroy '$setname-swap'."
 else
