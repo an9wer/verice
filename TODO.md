@@ -1,7 +1,0 @@
--   [x] Completion for command me
--   [x] Docker mount verice directory
--   [ ] Cron or systemd of jobs
--   [ ] Uninstall configuration files
--   [ ] Use github api (token) to pull and push repository
--   [ ] Exit stauts of in Python and Bash scripts
--   [ ] M4
