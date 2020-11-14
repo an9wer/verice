@@ -1,0 +1,44 @@
+#!/bin/bash
+
+die() {
+  echo "${@:2}"
+  exit $1
+}
+
+usage() {
+  echo "Usage: $(basename $0) [-h|--help] [-f|--force] <SAVEDFILE>"
+  echo ""
+  echo "Arguments"
+  echo "  -h, --help       Display this help page"
+  echo "  -f, --force      Overwrite existing file"
+  echo "  <SAVEDFILE>      File path to save the output"
+  exit 0
+}
+
+while (( ${#@} > 0 )) ; do
+  case $1 in
+    -h|--help  ) usage ;;
+    -f|--force ) force=true ;;
+    *          ) if [[ ! -v savedfile ]]; then savedfile=$1; else die 1 "Support only single <SAVEDFILE>."; fi ;;
+  esac
+  shift
+done
+
+if [[ ! -v savedfile ]]; then
+  die 1 "No <SAVEDFILE> provided."
+fi
+
+if [[ -d $savedfile ]]; then
+  die 1 "'$savedfile' is a directory, not a file."
+fi
+
+if [[ -f $savedfile && $force != true ]]; then
+  die 1 "'$savedfile' is already existed."
+fi
+
+tempdir=$(mktemp -d "/tmp/$(basename $0).XXXXX")
+git clone --depth 1 https://github.com/felixonmars/dnsmasq-china-list.git "$tempdir"
+pushd "$tempdir"
+make dnscrypt-proxy
+mv -f dnscrypt-proxy-forwarding-rules.txt "$savedfile"
+popd
