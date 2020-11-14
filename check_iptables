@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 die() {
   echo "${@:2}"
@@ -6,7 +6,7 @@ die() {
 }
 
 usage() {
-  echo "Usage: check_iptables [-h|--help] [-H|--html] [-Z|--zero] <TABLE> [<TABLE> ...]"
+  echo "Usage: $(basename $0) [-h|--help] [-H|--html] [-Z|--zero] <TABLE> [<TABLE> ...]"
   echo ""
   echo "Arguments"
   echo "  -h, --help     Display this help page"

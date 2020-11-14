@@ -1,4 +1,4 @@
-#!/usr/bin/bash -e
+#!/bin/bash -e
 
 die() {
   echo "${@:2}"
@@ -6,7 +6,7 @@ die() {
 }
 
 usage() {
-  echo "Usage: check_update [-h|--help] [-H|--html]"
+  echo "Usage: $(basename $0) [-h|--help] [-H|--html]"
   echo ""
   echo "Arguments"
   echo "  -h, --help     Display this help page"

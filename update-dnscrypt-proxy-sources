@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 die() {
   echo "${@:2}"
@@ -6,7 +6,7 @@ die() {
 }
 
 usage() {
-  echo "Usage: update-dnscrypt-proxy-sources [-h|--help] [-H|--html] [-x|--proxy <PROXY>] <SAVEDIR>"
+  echo "Usage: $(basename $0) [-h|--help] [-H|--html] [-x|--proxy <PROXY>] <SAVEDIR>"
   echo ""
   echo "Arguments"
   echo "  -h, --help       Display this help page"
@@ -19,7 +19,6 @@ usage() {
 while (( ${#@} > 0 )) ; do
   case $1 in
     -h|--help    ) usage ;;
-    -n|--new     ) new=true ;;
     -H|--html    ) html=true ;;
     -x|--proxy   ) shift; proxy="-x $1" ;;
     *            ) if [[ ! -v savedir ]]; then savedir=$1; else die 1 "Support only one <SAVEDIR>."; fi ;;
