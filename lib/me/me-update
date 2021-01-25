@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-# Update system
-
-case $(me release) in
-  arch) pacman -Syu --noconfirm ;;
-  raspbian) apt update && apt upgrade -y ;;
-  *) me err "Unknown distro :(" ;;
-esac
