@@ -1,0 +1,72 @@
+#!/bin/bash
+
+EXIT_OK=0
+EXIT_WARNING=1
+EXIT_CRITICAL=2
+EXIT_UNKNOWN=3
+
+die() {
+  echo "${@:2}"
+  exit $1
+}
+
+usage() {
+  echo "Usage: $(basename $0) [-h|--help] -k|--key <KEY> -w|--warning <WARNGING> -c|--critical <CRITICAL> [--instance-id <ID>] <MENU>"
+  echo ""
+  echo "Arguments"
+  echo "  -h, --help       Display this help page"
+  echo "  -k, --key        Vultr api key"
+  echo "  -w, --warning    Warning threshold"
+  echo "  -c, --critical   Critical threshold"
+  echo "  --instance-id    Instance id needed when checking bandwidth"
+  echo "  <MENU>           Which menu to check, only support 'billing' and 'bandwidth' now"
+  exit $EXIT_UNKNOWN
+}
+
+while (( ${#@} > 0 )) ; do
+  case $1 in
+    -h|--help     ) usage ;;
+    -k|--key      ) shift; key=$1 ;;
+    -w|--warning  ) shift; warning=$1 ;;
+    -c|--critical ) shift; critical=$1 ;;
+    --instance-id ) shift; instance=$1 ;;
+    *             ) if [[ $1 =~ ^billing$|^bandwidth$ ]]; then menu=$1; else die 1 "Unsupport menu '$1' to check"; fi ;;
+  esac
+  shift
+done
+
+if [[ ! -v warning ]] || [[ ! -v critical ]]; then
+  usage
+fi
+
+if [[ ! -v key ]]; then
+  die $EXIT_UNKNOWN "No api key provided"
+fi
+
+if [[ ! -v menu ]]; then
+  die $EXIT_UNKNOWN "No <MENU> provided."
+fi
+
+case $menu in
+  billing )
+    value=$(curl --silent --location --request GET --header "Authorization: Bearer $key" 'https://api.vultr.com/v2/account' | jq '.account.balance | if . < 0 then -1 * . else . end')
+    if (( $(bc <<< "$value <= $critical") == 1 )); then
+      die $EXIT_CRITICAL "Billing CRITICAL: $value left"
+    elif (( $(bc <<< "$value <= $warning") == 1 )); then
+      die $EXIT_WARNING "Billing WARNING: $value left"
+    else
+      die $EXIT_OK "Billing OK: $value left"
+    fi
+    ;;
+
+  bandwidth )
+    value=$(curl --silent --location --request GET --header "Authorization: Bearer $key" "https://api.vultr.com/v2/instances/$instance/bandwidth" | jq '[ .bandwidth |  with_entries( select(.key | startswith("2021-01") ) ) | .[].outgoing_bytes ] | add | . / 1000 / 1000 / 1000')
+    if (( $(bc <<< "$value >= $critical") == 1 )); then
+      die $EXIT_CRITICAL "Bandwidth CRITICAL: ${value}G has been used"
+    elif (( $(bc <<< "$value >= $warning") == 1 )); then
+      die $EXIT_WARNING "Bandwidth WARNING: ${value}G has been used"
+    else
+      die $EXIT_OK "Bandwidth OK: ${value}G has been used"
+    fi
+    ;;
+esac
