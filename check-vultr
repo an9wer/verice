@@ -49,7 +49,7 @@ fi
 
 case $menu in
   billing )
-    value=$(curl --silent --location --request GET --header "Authorization: Bearer $key" 'https://api.vultr.com/v2/account' | jq '.account.balance | if . < 0 then -1 * . else . end')
+    value=$(curl --silent --location --request GET --header "Authorization: Bearer $key" 'https://api.vultr.com/v2/account' | jq '.account as { balance: $balance, pending_charges: $pending_charges } | if $balance < 0 then -1 * ($balance + $pending_charges) else $balance - $pending_charges end')
     if (( $(bc <<< "$value <= $critical") == 1 )); then
       die $EXIT_CRITICAL "Billing CRITICAL: $value left"
     elif (( $(bc <<< "$value <= $warning") == 1 )); then
