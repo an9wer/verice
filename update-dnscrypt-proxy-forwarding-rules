@@ -10,6 +10,7 @@ usage() {
   echo ""
   echo "Arguments"
   echo "  -h, --help       Display this help page"
+  echo "  -H, --html       Display the result in html"
   echo "  -f, --force      Overwrite existing file"
   echo "  <SAVEDFILE>      File path to save the output"
   exit 0
@@ -18,6 +19,7 @@ usage() {
 while (( ${#@} > 0 )) ; do
   case $1 in
     -h|--help  ) usage ;;
+    -H|--html  ) html=true ;;
     -f|--force ) force=true ;;
     *          ) if [[ ! -v savedfile ]]; then savedfile=$1; else die 1 "Support only single <SAVEDFILE>."; fi ;;
   esac
@@ -36,9 +38,26 @@ if [[ -f $savedfile && $force != true ]]; then
   die 1 "'$savedfile' is already existed."
 fi
 
+if [[ $html == true ]]; then
+  echo "<pre>"
+fi
+
 tempdir=$(mktemp -d "/tmp/$(basename $0).XXXXX")
 git clone --depth 1 https://github.com/felixonmars/dnsmasq-china-list.git "$tempdir"
 pushd "$tempdir"
 make dnscrypt-proxy
-mv -f dnscrypt-proxy-forwarding-rules.txt "$savedfile"
+if [[ -f dnscrypt-proxy-forwarding-rules.txt ]]; then
+  mv -f dnscrypt-proxy-forwarding-rules.txt "$savedfile"
+else
+  echo "Failed to build 'dnscrypt-proxy-forwarding-rules.txt'"
+  if [[ $html == true ]]; then
+    die 1 "</pre>"
+  else
+    die 1
+  fi
+fi
 popd
+
+if [[ $html == true ]]; then
+  echo "</pre>"
+fi
