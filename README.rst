@@ -15,3 +15,4 @@ Scripts for nagios
 ------------------
 
 - check-vultr
+- check-bandwagonhost
