@@ -50,7 +50,7 @@ fi
 
 echo "Use $v urls."
 
-tempdir=$(mktemp -d /tmp/dnscrypt-proxy-sources.XXXXX)
+tempdir=$(mktemp -d /tmp/$(basename $0).XXXXX)
 
 for source in public-resolvers.md public-resolvers.md.minisig relays.md relays.md.minisig; do
   if curl $proxy -S -k -o "$tempdir/$source" \

@@ -11,9 +11,9 @@ usage() {
   echo "Arguments"
   echo "  -h, --help     Display this help page"
   echo "  -H, --html     Display the result in html"
-  echo "  -n, --new      Update by downloading new list"
-  echo "  -x, --proxy    Use proxy when downloading new list"
-  echo "  -f, --file     Use an existed list file. When used with '-n' option, it will save download to this file"
+  echo "  -n, --new      Update entries in file by syncing from remote"
+  echo "  -x, --proxy    Use proxy when syncing from remote"
+  echo "  -f, --file     File to save entries"
   echo "  <SETNAME>      Setname used by ipset"
   exit 0
 }
@@ -52,7 +52,7 @@ if [[ $new == true ]]; then
     die 1 "Cannot find '$dir'."
   fi
   # To compatible with busybox, temp template must suffix with six 'X' (i.e. tmp.XXXXXX)
-  temp=$(mktemp /tmp/ipset-cn.XXXXXX)
+  temp=$(mktemp /tmp/$(basename $0).XXXXXX)
 
   curl $proxy -S -k -o "$temp" \
     'https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt'
