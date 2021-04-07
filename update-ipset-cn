@@ -51,7 +51,8 @@ if [[ $new == true ]]; then
     ipset destroy "$setname-swap"
     die 1 "Cannot find '$dir'."
   fi
-  temp=$(mktemp /tmp/ipset-cn.XXXXX)
+  # To compatible with busybox, temp template must suffix with six 'X' (i.e. tmp.XXXXXX)
+  temp=$(mktemp /tmp/ipset-cn.XXXXXX)
 
   curl $proxy -S -k -o "$temp" \
     'https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt'
@@ -60,7 +61,6 @@ else
     ipset destroy "$setname-swap"
     die 1 "Cannot read '$file'."
   fi
-
 fi
 
 while read block; do
