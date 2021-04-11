@@ -47,7 +47,7 @@ fi
 
 case $menu in
   bandwidth )
-    value=$(curl --silent --location --request GET "https://api.64clouds.com/v1/getServiceInfo?veid=1454559&api_key=$key" | jq '.data_counter / 1000 / 1000 / 1000')
+    value=$(curl --silent --location --request GET "https://api.64clouds.com/v1/getServiceInfo?veid=1454559&api_key=$key" | jq '.data_counter / 1024 / 1024 / 1024')
     if (( $(bc <<< "$value >= $critical") == 1 )); then
       die $EXIT_CRITICAL "Bandwidth CRITICAL: ${value}G has been used"
     elif (( $(bc <<< "$value >= $warning") == 1 )); then
