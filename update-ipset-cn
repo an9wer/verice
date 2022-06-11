@@ -6,94 +6,61 @@ die() {
 }
 
 usage() {
-  echo "Usage: $(basename $0) [-h|--help] [-H|--html] [-n|--new] [-x|--proxy <PROXY>] -f|--file <FILE> <SETNAME>"
+  echo "Usage: $(basename $0) [-h|--help] [-u|--update] [-x|--proxy <PROXY>] -f|--file <FILE> <SETNAME>"
   echo ""
   echo "Arguments"
   echo "  -h, --help     Display this help page"
-  echo "  -H, --html     Display the result in html"
-  echo "  -n, --new      Update entries in file by syncing from remote"
+  echo "  -u, --update   Sync from remote to update entries"
   echo "  -x, --proxy    Use proxy when syncing from remote"
-  echo "  -f, --file     File to save entries"
+  echo "  -f, --file     File path to load entries"
   echo "  <SETNAME>      Setname used by ipset"
   exit 0
 }
 
 while (( ${#@} > 0 )) ; do
   case $1 in
-    -h|--help  ) usage ;;
-    -n|--new   ) new=true ;;
-    -H|--html  ) html=true ;;
-    -f|--file  ) shift; file=$1 ;;
-    -x|--proxy ) shift; proxy="-x $1" ;;
-    *          ) if [[ ! -v setname ]]; then setname=$1; else die 1 "Support only one <SETNAME>."; fi ;;
+    -h|--help  	) usage ;;
+    -u|--update ) update=true ;;
+    -f|--file   ) shift; file=$1 ;;
+    -x|--proxy  ) shift; proxy="-x $1" ;;
+    *           ) if [[ ! -v setname ]]; then setname=$1; else die 1 "unsupport multiple <SETNAME>."; fi ;;
   esac
   shift
 done
+
 if [[ ! -v setname ]]; then
-  die 1 "No <SETNAME> provided."
+  die 1 "<SETNAME> is required"
 fi
 if [[ ! -v file ]]; then
-  die 1 "No <FILE> provided."
+  die 1 "<FILE> is required"
+fi
+if [[ ! -f $file ]]; then
+  die 1 "'$file' must be existed"
 fi
 
-if [[ $html == true ]]; then
-  echo "<pre>"
-fi
+# To compatible with busybox, temp template must suffix with six 'X', such as tmp.XXXXXX
+setname_temp=$(mktemp -u $setname-XXXXXX)
 
-ipset create "$setname" hash:net &> /dev/null ||
-  echo "Create '$setname', but it already exists."
-ipset create "$setname-swap" hash:net &> /dev/null ||
-  die 1 "Create '$setname-swap', but it already exists."
+ipset create "$setname" hash:net &> /dev/null
+ipset create "$setname_temp" hash:net &> /dev/null
 
-if [[ $new == true ]]; then
-  dir=$(dirname "$file")
-  if [[ ! -d $dir ]]; then
-    ipset destroy "$setname-swap"
-    die 1 "Cannot find '$dir'."
-  fi
-  # To compatible with busybox, temp template must suffix with six 'X' (i.e. tmp.XXXXXX)
-  temp=$(mktemp /tmp/$(basename $0).XXXXXX)
-
-  curl $proxy -S -k -o "$temp" \
+if [[ $update == true ]]; then
+  file_temp=$(mktemp -u /tmp/$(basename $0).XXXXXX)
+  curl $proxy -S -k -o "$file_temp" \
     'https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt'
-else
-  if [[ ! -r $file ]]; then
-    ipset destroy "$setname-swap"
-    die 1 "Cannot read '$file'."
-  fi
 fi
 
 while read block; do
-  ipset add "$setname-swap" "$block" || {
-    ipset destroy "$setname-swap"
-    exit 1
+  ipset add "$setname_temp" "$block" || {
+    ipset destroy "$setname_temp"
+    die 1 "Error to add '$block' into '$setname_temp'"
   }
-done < "${temp:-$file}"
+done < "${file_temp:-$file}"
 
-ipset list "$setname-swap" | perl -F: -lane '
-BEGIN {
-  my $es = 0;
-}
-if (@F[0] =~ /Number of entries/ && @F[1] > 0) {
-  $es = 123;
-}
-END {
-  exit $es;
-}
-'
-if (( $? == 123 )); then
-  ipset swap "$setname-swap" "$setname" && {
-    echo "Swap '$setname-swap' and '$setname'."
-    if [[ $new == true ]]; then
-      mv "$temp" "$file"
-    fi
-  }
-  ipset destroy "$setname-swap" &&
-    echo "Destroy '$setname-swap'."
-else
-  die 1 "'$setname-swap' is empty."
+ipset swap "$setname_temp" "$setname"
+
+if [[ $update == true ]]; then
+  mv "$file_temp" "$file"
 fi
 
-if [[ $html == true ]]; then
-  echo "</pre>"
-fi
+ipset destroy "$setname_temp"
